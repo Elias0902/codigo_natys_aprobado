@@ -3,6 +3,8 @@
   --primary-color: #2563eb;
   --primary-dark: #1d4ed8;
   --primary-light: #3b82f6;
+  --tableprimary-color:#e1251b;
+  --tableprimary-dark: #d8281e;
   --secondary-color: #64748b;
   --success-color: #10b981;
   --warning-color: #f59e0b;
@@ -26,6 +28,17 @@
 * {
   box-sizing: border-box;
 }
+
+    #clientes {
+        margin: 0 auto;
+    }
+
+    #clientes th,
+    #clientes td {
+        text-align: center;
+        vertical-align: middle;
+    }
+
 
 body {
   font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -124,7 +137,7 @@ h1::after {
   position: absolute;
   left: -1.3rem;
   top: 50%;
-  transform: translateY(-65%);
+  transform: translateY(-60%);
   color: var(--text-secondary);
   pointer-events: none;
 }
@@ -141,7 +154,7 @@ table.dataTable {
 }
 
 table.dataTable thead th {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  background: linear-gradient(135deg, var(--tableprimary-color) 0%, var(--tableprimary-dark) 100%);
   color: white;
   font-weight: 600;
   text-transform: uppercase;
@@ -222,16 +235,16 @@ table.dataTable tbody tr:last-child td:last-child {
 }
 
 .dataTables_paginate .paginate_button:hover:not(.disabled) {
-  background: var(--primary-color);
-  border-color: var(--primary-color);
+  background: var(--tableprimary-color);
+  border-color: var(--tableprimary-color);
   color: white;
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
 
 .dataTables_paginate .paginate_button.current {
-  background: var(--primary-color);
-  border-color: var(--primary-color);
+  background: var(--tableprimary-color);
+  border-color: var(--tableprimary-color);
   color: white;
   box-shadow: var(--shadow-md);
 }
@@ -370,7 +383,7 @@ table.dataTable tbody tr:last-child td:last-child {
 
 .form-control:focus {
   outline: none;
-  border-color: var(--primary-color);
+  border-color: var(--tableprimary-color);
   box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
 }
 
@@ -510,7 +523,7 @@ table.dataTable tbody tr:last-child td:last-child {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--primary-color);
+  background: var(--tableprimary-color);
 }
 .visually-hidden {
     position: absolute;

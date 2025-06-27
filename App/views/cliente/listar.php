@@ -24,20 +24,22 @@
     <i class="fas fa-trash-restore me-2"></i>Mostrar Eliminados
     </button>
     </div>
-        
-        <div class="table-responsive">
-            <table id="clientes" class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Cédula</th>
-                        <th>Nombre</th>
-                        <th>Correo</th>
-                        <th>Teléfono</th>
-                        <th>Dirección</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
+
+
+<div class="table-responsive" style="text-align:center;">
+    <table id="clientes" class="table table-striped" style="margin: 0 auto; text-aling: center:">
+        <thead>
+            <tr>
+                <th>Cédula</th>
+                <th>Nombre</th>
+                <th>Correo</th>
+                <th>Teléfono</th>
+                <th>Dirección</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+
                 <tbody>
                     <?php foreach ($clientes as $cliente): ?>
                         <tr>
