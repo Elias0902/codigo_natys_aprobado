@@ -10,7 +10,7 @@ interface ConexionInterface {
 }
 
 // Clase abstracta que implementa la interfaz
-abstract class Conexion implements ConexionInterface {
+  class Conexion implements ConexionInterface {
     private $host = "localhost";
     private $db_name = "Natys";
     private $username = "root";
