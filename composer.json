@@ -1,0 +1,11 @@
+{
+    "name": "app/natys",
+    "description": "Galletas Naty's",
+    "type": "proyect",
+    "autoload": {
+        "psr-4": {
+            "App\\Natys\\": "App/"
+        }
+    },
+    "require": {}
+}
