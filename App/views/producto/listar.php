@@ -2,73 +2,66 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Gestión de Clientes</title>
+    <title>Gestión de Productos</title>
     <link rel="icon" href="../Natys/Assets/img/natys.png" type="image/x-icon">
     <link rel="stylesheet" href="Assets/css/listar.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
-    
 </head>
 <body>
     <div class="container-fluid py-4">
-        <h1 class="mb-4" style="text-align: center;">Gestión de Clientes</h1>
+        <h1 class="mb-4" style="text-align: center;">Gestión de Productos</h1>
         
+        <div class="d-flex justify-content-between mb-3">
+            <button type="button" class="btn btn-success" id="btnNuevoProducto">
+                <i class="fas fa-plus-circle me-2"></i>Nuevo Producto
+            </button>
+            <button type="button" class="btn btn-warning" id="btnToggleEstado">
+                <i class="fas fa-trash-restore me-2"></i>Mostrar Eliminados
+            </button>
+        </div>
 
-    <div class="d-flex justify-content-between mb-3">
-    <button type="button" class="btn btn-success" id="btnNuevoCliente">
-        <i class="fas fa-plus-circle me-2"></i>Nuevo Cliente
-    </button>
-    <button type="button" class="btn btn-warning" id="btnToggleEstado">
-    <i class="fas fa-trash-restore me-2"></i>Mostrar Eliminados
-    </button>
-    </div>
-
-
-<div class="table-responsive" style="text-align:center;">
-    <table id="clientes" class="table table-striped" style="margin: 0 auto; text-aling: center:">
-        <thead>
-            <tr>
-                <th>Cédula</th>
-                <th>Nombre</th>
-                <th>Correo</th>
-                <th>Teléfono</th>
-                <th>Dirección</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-
+        <div class="table-responsive" style="text-align:center;">
+            <table id="productos" class="table table-striped" style="width:100%">
+    <thead>
+        <tr>
+            <th>Código</th>
+            <th>Nombre</th>
+            <th>Precio</th>
+            <th>Unidad</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
                 <tbody>
-                    <?php foreach ($clientes as $cliente): ?>
+                    <?php foreach ($productos as $producto): ?>
                         <tr>
-                            <td data-cedula="<?php echo htmlspecialchars($cliente['ced_cliente']); ?>">
-                                <?php echo htmlspecialchars($cliente['ced_cliente']); ?>
+                            <td data-codigo="<?php echo htmlspecialchars($producto['cod_producto']); ?>">
+                                <?php echo htmlspecialchars($producto['cod_producto']); ?>
                             </td>
-                            <td><?php echo htmlspecialchars($cliente['nomcliente']); ?></td>
-                            <td><?php echo htmlspecialchars($cliente['correo']); ?></td>
-                            <td><?php echo htmlspecialchars($cliente['telefono']); ?></td>
-                            <td><?php echo htmlspecialchars($cliente['direccion']); ?></td>
-                            <td><?php echo $cliente['estado'] == 1 ? 'Activo' : 'Inactivo'; ?></td>
+                            <td><?php echo htmlspecialchars($producto['nombre']); ?></td>
+                            <td><?php echo htmlspecialchars($producto['precio']); ?></td>
+                            <td><?php echo htmlspecialchars($producto['unidad']); ?></td>
+                            <td><?php echo $producto['estado'] == 1 ? 'Activo' : 'Inactivo'; ?></td>
                             <td>
                                 <div class="actions">
-                                    <a href="index.php?url=cliente&action=editar&ced_cliente=<?php echo $cliente['ced_cliente']; ?>" 
-                                       class="editar" title="Editar cliente">
+                                    <a href="#" class="editar" 
+                                       data-codigo="<?php echo $producto['cod_producto']; ?>" 
+                                       title="Editar producto">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <?php if ($cliente['estado'] == 1): ?>
-                                        <a href="index.php?url=cliente&action=eliminar&ced_cliente=<?php echo $cliente['ced_cliente']; ?>" 
-                                           class="eliminar" 
-                                           onclick="return confirm('¿Está seguro de eliminar este cliente?');"
-                                           title="Eliminar cliente">
+                                    <?php if ($producto['estado'] == 1): ?>
+                                        <a href="#" class="eliminar" 
+                                           data-codigo="<?php echo $producto['cod_producto']; ?>" 
+                                           title="Eliminar producto">
                                             <i class="fas fa-trash-alt"></i>
                                         </a>
                                     <?php else: ?>
-                                        <a href="index.php?url=cliente&action=restaurar&ced_cliente=<?php echo $cliente['ced_cliente']; ?>" 
-                                           class="restaurar" 
-                                           onclick="return confirm('¿Está seguro de restaurar este cliente?');"
-                                           title="Restaurar cliente">
+                                        <a href="#" class="restaurar" 
+                                           data-codigo="<?php echo $producto['cod_producto']; ?>" 
+                                           title="Restaurar producto">
                                             <i class="fas fa-undo"></i>
                                         </a>
                                     <?php endif; ?>
@@ -86,101 +79,14 @@
         </a>
     </div>
 
-    <div class="modal fade" id="modalEliminar" tabindex="-1" aria-labelledby="modalEliminarLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title" id="modalEliminarLabel">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        Confirmar Eliminación
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body text-center">
-                    <div class="mb-3">
-                        <i class="fas fa-user-times fa-3x text-danger mb-3"></i>
-                    </div>
-                    <p class="fs-5 mb-3">¿Está seguro de eliminar este cliente?</p>
-                    <p class="text-muted">
-                        Esta acción cambiará el estado del cliente a inactivo.<br>
-                        Podrá restaurarlo posteriormente si es necesario.
-                    </p>
-                    <input type="hidden" id="cedulaEliminar">
-                </div>
-                <div class="modal-footer justify-content-center">
-                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-1"></i>Cancelar
-                    </button>
-                    <button type="button" class="btn btn-danger" id="confirmarEliminar">
-                        <i class="fas fa-trash-alt me-1"></i>Eliminar Cliente
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="modalRestaurar" tabindex="-1" aria-labelledby="modalRestaurarLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-warning text-dark">
-                    <h5 class="modal-title" id="modalRestaurarLabel">
-                        <i class="fas fa-undo me-2"></i>
-                        Confirmar Restauración
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body text-center">
-                    <div class="mb-3">
-                        <i class="fas fa-user-check fa-3x text-warning mb-3"></i>
-                    </div>
-                    <p class="fs-5 mb-3">¿Está seguro de restaurar este cliente?</p>
-                    <p class="text-muted">
-                        Esta acción activará nuevamente el cliente<br>
-                        y estará disponible para realizar operaciones.
-                    </p>
-                    <input type="hidden" id="cedulaRestaurar">
-                </div>
-                <div class="modal-footer justify-content-center">
-                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-1"></i>Cancelar
-                    </button>
-                    <button type="button" class="btn btn-warning" id="confirmarRestaurar">
-                        <i class="fas fa-undo me-1"></i>Restaurar Cliente
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="modalEditar" tabindex="-1" aria-labelledby="modalEditarLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="modalEditarLabel">
-                        <i class="fas fa-edit me-2"></i>
-                        Editar Cliente
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="contenidoEditar">
-                    <div class="text-center py-4">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Cargando...</span>
-                        </div>
-                        <p class="mt-2 text-muted">Cargando información del cliente...</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
+    <!-- Modales -->
     <div class="modal fade" id="modalNuevo" tabindex="-1" aria-labelledby="modalNuevoLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-success text-white">
                     <h5 class="modal-title" id="modalNuevoLabel">
-                        <i class="fas fa-user-plus me-2"></i>
-                        Nuevo Cliente
+                        <i class="fas fa-box me-2"></i>
+                        Nuevo Producto
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -196,87 +102,96 @@
         </div>
     </div>
 
+    <div class="modal fade" id="modalEditar" tabindex="-1" aria-labelledby="modalEditarLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalEditarLabel">
+                        <i class="fas fa-edit me-2"></i>
+                        Editar Producto
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="contenidoEditar">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Cargando información del producto...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <template id="templateFormulario">
         <div class="container-fluid p-0">
-            <form id="formCliente" class="needs-validation" novalidate>
-                <input type="hidden" name="original_cedula" id="original_cedula">
+            <form id="formProducto" class="needs-validation" novalidate>
+                <input type="hidden" name="original_codigo" id="original_codigo">
                 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label for="ced_cliente" class="form-label">
-                            <i class="fas fa-id-card me-1"></i>Cédula *
+                        <label for="cod_producto" class="form-label">
+                            <i class="fas fa-barcode me-1"></i>Código del Producto *
                         </label>
                         <input type="text" 
                                class="form-control" 
-                               id="ced_cliente" 
-                               name="ced_cliente" 
-                               placeholder="Ingrese la cédula"
+                               id="cod_producto" 
+                               name="cod_producto" 
+                               placeholder="Ingrese el código del producto"
                                required>
                         <div class="invalid-feedback">
-                            Por favor ingrese la cédula del cliente
+                            Por favor ingrese el código del producto
                         </div>
                     </div>
                     
                     <div class="col-md-6 mb-3">
-                        <label for="nomcliente" class="form-label">
-                            <i class="fas fa-user me-1"></i>Nombre Completo *
+                        <label for="nombre" class="form-label">
+                            <i class="fas fa-box me-1"></i>Nombre del Producto *
                         </label>
                         <input type="text" 
                                class="form-control" 
-                               id="nomcliente" 
-                               name="nomcliente" 
-                               placeholder="Ingrese el nombre completo"
+                               id="nombre" 
+                               name="nombre" 
+                               placeholder="Ingrese el nombre del producto"
                                required>
                         <div class="invalid-feedback">
-                            Por favor ingrese el nombre del cliente
+                            Por favor ingrese el nombre del producto
                         </div>
                     </div>
                 </div>
                 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label for="correo" class="form-label">
-                            <i class="fas fa-envelope me-1"></i>Correo Electrónico *
+                        <label for="precio" class="form-label">
+                            <i class="fas fa-tag me-1"></i>Precio *
                         </label>
-                        <input type="email" 
+                        <input type="number" 
                                class="form-control" 
-                               id="correo" 
-                               name="correo" 
-                               placeholder="ejemplo@correo.com"
+                               id="precio" 
+                               name="precio" 
+                               placeholder="Ingrese el precio"
+                               step="0.01"
+                               min="0"
                                required>
                         <div class="invalid-feedback">
-                            Por favor ingrese un correo electrónico válido
+                            Por favor ingrese un precio válido
                         </div>
                     </div>
                     
                     <div class="col-md-6 mb-3">
-                        <label for="telefono" class="form-label">
-                            <i class="fas fa-phone me-1"></i>Teléfono *
+                        <label for="unidad" class="form-label">
+                            <i class="fas fa-balance-scale me-1"></i>Unidad de Medida *
                         </label>
-                        <input type="tel" 
+                        <input type="text" 
                                class="form-control" 
-                               id="telefono" 
-                               name="telefono" 
-                               placeholder="Ingrese el número de teléfono"
+                               id="unidad" 
+                               name="unidad" 
+                               placeholder="Ej: kg, litros, unidades"
                                required>
                         <div class="invalid-feedback">
-                            Por favor ingrese el número de teléfono
+                            Por favor ingrese la unidad de medida
                         </div>
-                    </div>
-                </div>
-                
-                <div class="mb-4">
-                    <label for="direccion" class="form-label">
-                        <i class="fas fa-map-marker-alt me-1"></i>Dirección *
-                    </label>
-                    <textarea class="form-control" 
-                              id="direccion" 
-                              name="direccion" 
-                              rows="3" 
-                              placeholder="Ingrese la dirección completa"
-                              required></textarea>
-                    <div class="invalid-feedback">
-                        Por favor ingrese la dirección del cliente
                     </div>
                 </div>
                 
@@ -285,13 +200,12 @@
                         <i class="fas fa-times me-1"></i>Cancelar
                     </button>
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-1"></i>Guardar Cliente
+                        <i class="fas fa-save me-1"></i>Guardar Producto
                     </button>
                 </div>
             </form>
         </div>
     </template>
-
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -299,6 +213,6 @@
     <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/5.5.2/bootbox.min.js"></script>
-    <script src="../Natys/Assets/js/cliente.js"></script>
+    <script src="../Natys/Assets/js/producto.js"></script>
 </body>
 </html>
