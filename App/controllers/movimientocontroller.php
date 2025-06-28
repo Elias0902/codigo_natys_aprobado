@@ -24,7 +24,9 @@ switch ($action) {
                     'data' => [
                         'num_movimiento' => $datos['num_movimiento'],
                         'fecha' => $datos['fecha'],
-                        'observaciones' => $datos['observaciones']
+                        'observaciones' => $datos['observaciones'],
+                        'cod_producto' => $datos['cod_producto'] ?? '',
+                        'cant_productos' => $datos['cant_productos'] ?? ''
                     ]
                 ]);
             } else {
@@ -42,12 +44,22 @@ switch ($action) {
         exit();
         break;
 
+    case 'obtenerProductos':
+        header('Content-Type: application/json');
+        $productos = $movimiento->listarProductos();
+        echo json_encode(['success' => true, 'data' => $productos]);
+        exit();
+        break;
+
     case 'guardar':
         header('Content-Type: application/json');
-        if (isset($_POST['fecha'], $_POST['observaciones'])) {
+        if (isset($_POST['fecha'], $_POST['observaciones'], $_POST['producto'], $_POST['cantidad'])) {
             $movimiento = new Movimiento();
             $movimiento->fecha = $_POST['fecha'];
             $movimiento->observaciones = $_POST['observaciones'];
+            $movimiento->cod_producto = $_POST['producto'];
+            $movimiento->cant_productos = $_POST['cantidad'];
+            $movimiento->precio_venta = 0; // Puedes modificar esto para obtener el precio del producto
 
             if ($movimiento->guardar()) {
                 echo json_encode([
@@ -70,11 +82,14 @@ switch ($action) {
 
     case 'actualizar':
         header('Content-Type: application/json');
-        if (isset($_POST['num_movimiento'], $_POST['fecha'], $_POST['observaciones'])) {
+        if (isset($_POST['num_movimiento'], $_POST['fecha'], $_POST['observaciones'], $_POST['producto'], $_POST['cantidad'])) {
             $movimiento = new Movimiento();
             $movimiento->num_movimiento = $_POST['num_movimiento'];
             $movimiento->fecha = $_POST['fecha'];
             $movimiento->observaciones = $_POST['observaciones'];
+            $movimiento->cod_producto = $_POST['producto'];
+            $movimiento->cant_productos = $_POST['cantidad'];
+            $movimiento->precio_venta = 0; // Puedes modificar esto para obtener el precio del producto
 
             $resultado = $movimiento->actualizar();
             if ($resultado) {

@@ -29,6 +29,8 @@
                     <tr>
                         <th>N° Movimiento</th>
                         <th>Fecha</th>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
                         <th>Observaciones</th>
                         <th>Estado</th>
                         <th>Acciones</th>
@@ -41,6 +43,16 @@
                                 <?php echo htmlspecialchars($movimiento['num_movimiento']); ?>
                             </td>
                             <td><?php echo htmlspecialchars($movimiento['fecha']); ?></td>
+                            <td>
+                                <?php 
+                                if(isset($movimiento['cod_producto'])) {
+                                    echo htmlspecialchars($movimiento['cod_producto'] . ' - ' . ($movimiento['producto_nombre'] ?? ''));
+                                } else {
+                                    echo 'N/A';
+                                }
+                                ?>
+                            </td>
+                            <td><?php echo htmlspecialchars($movimiento['cant_productos'] ?? '0'); ?></td>
                             <td><?php echo htmlspecialchars($movimiento['observaciones']); ?></td>
                             <td><?php echo $movimiento['estado'] == 1 ? 'Activo' : 'Inactivo'; ?></td>
                             <td>
@@ -203,6 +215,36 @@
                                required>
                         <div class="invalid-feedback">
                             Por favor ingrese la fecha del movimiento
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label for="producto" class="form-label">
+                            <i class="fas fa-box me-1"></i>Producto *
+                        </label>
+                        <select class="form-select" id="producto" name="producto" required>
+                            <option value="">Seleccione un producto</option>
+                            <!-- Las opciones se llenarán con JavaScript -->
+                        </select>
+                        <div class="invalid-feedback">
+                            Por favor seleccione un producto
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="cantidad" class="form-label">
+                            <i class="fas fa-hashtag me-1"></i>Cantidad *
+                        </label>
+                        <input type="number" 
+                               class="form-control" 
+                               id="cantidad" 
+                               name="cantidad" 
+                               min="1"
+                               required>
+                        <div class="invalid-feedback">
+                            Por favor ingrese la cantidad
                         </div>
                     </div>
                     

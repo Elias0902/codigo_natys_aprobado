@@ -2,6 +2,7 @@ $(document).ready(function() {
     let table;
     let mostrandoEliminados = false;
 
+    // Configuración de Toastr para notificaciones
     toastr.options = {
         "closeButton": true,
         "progressBar": false,
@@ -10,6 +11,7 @@ $(document).ready(function() {
         "escapeHtml": true
     };
 
+    // Inicialización de DataTable
     function inicializarDataTable() {
         if ($.fn.DataTable.isDataTable('#movimientos')) {
             table.destroy();
@@ -37,6 +39,21 @@ $(document).ready(function() {
             columns: [
                 { data: 'num_movimiento' },
                 { data: 'fecha' },
+                { 
+                    data: null,
+                    render: function(data) {
+                        if(data.cod_producto) {
+                            return data.cod_producto + ' - ' + (data.producto_nombre || '');
+                        }
+                        return 'N/A';
+                    }
+                },
+                { 
+                    data: 'cant_productos',
+                    render: function(data) {
+                        return data || '0';
+                    }
+                },
                 { data: 'observaciones' },
                 { 
                     data: 'estado',
@@ -76,18 +93,20 @@ $(document).ready(function() {
         });
     }
 
+    // Recargar la tabla
     function recargarTabla() {
         if (table) {
             table.ajax.url(
                 mostrandoEliminados 
                     ? 'index.php?url=movimiento&action=listarEliminados' 
                     : 'index.php?url=movimiento&action=listar'
-            ).load();
+            ).load(null, false); // El segundo parámetro false evita resetear la paginación
         } else {
             inicializarDataTable();
         }
     }
 
+    // Alternar entre movimientos activos e eliminados
     function toggleMovimientos() {
         mostrandoEliminados = !mostrandoEliminados;
         const btn = $('#btnToggleEstado');
@@ -97,29 +116,63 @@ $(document).ready(function() {
         recargarTabla();
     }
 
+    // Cargar formulario con datos de productos
     const cargarFormulario = (modalId, contenidoId, datos = null) => {
-        const template = document.getElementById('templateFormulario');
-        const clone = template.content.cloneNode(true);
-        const form = clone.querySelector('form');
-        
-        if (datos) {
-            form.querySelector('#num_movimiento').value = datos.num_movimiento || '';
-            form.querySelector('#fecha').value = datos.fecha || '';
-            form.querySelector('#observaciones').value = datos.observaciones || '';
-        }
-        
-        $(contenidoId).empty().append(clone);
-        $(modalId).modal('show');
-        
-        form.addEventListener('submit', function(e) {
-            if (!form.checkValidity()) {
-                e.preventDefault();
-                e.stopPropagation();
+        $.ajax({
+            url: 'index.php?url=movimiento&action=obtenerProductos',
+            type: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                if (response && response.success && response.data) {
+                    const template = document.getElementById('templateFormulario');
+                    const clone = template.content.cloneNode(true);
+                    const form = clone.querySelector('form');
+                    
+                    // Llenar select de productos
+                    const select = clone.querySelector('#producto');
+                    response.data.forEach(producto => {
+                        const option = document.createElement('option');
+                        option.value = producto.cod_producto;
+                        option.textContent = `${producto.cod_producto} - ${producto.nombre}`;
+                        select.appendChild(option);
+                    });
+                    
+                    // Llenar datos si existen
+                    if (datos) {
+                        form.querySelector('#num_movimiento').value = datos.num_movimiento || '';
+                        form.querySelector('#fecha').value = datos.fecha || '';
+                        form.querySelector('#observaciones').value = datos.observaciones || '';
+                        if (datos.cod_producto) {
+                            form.querySelector('#producto').value = datos.cod_producto;
+                        }
+                        if (datos.cant_productos) {
+                            form.querySelector('#cantidad').value = datos.cant_productos;
+                        }
+                    }
+                    
+                    $(contenidoId).empty().append(clone);
+                    $(modalId).modal('show');
+                    
+                    // Validación del formulario
+                    form.addEventListener('submit', function(e) {
+                        if (!form.checkValidity()) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+                } else {
+                    toastr.error('Error al cargar los productos');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error al obtener productos:', error, xhr.responseText);
+                toastr.error('Error al cargar los productos');
             }
-            form.classList.add('was-validated');
-        }, false);
+        });
     };
 
+    // Confirmar acciones (eliminar/restaurar)
     const confirmarAccion = ({ id, url, method, successMessage }) => {
         $.ajax({
             url: url,
@@ -141,6 +194,7 @@ $(document).ready(function() {
         });
     };
 
+    // Manejar envío del formulario
     const manejarFormulario = () => {
         $(document).on('submit', '#formMovimiento', function(e) {
             e.preventDefault();
@@ -179,12 +233,12 @@ $(document).ready(function() {
         });
     };
 
-    manejarFormulario();
-    $('#btnNuevoMovimiento').click(() => {
+    // Eventos
+    $(document).on('click', '#btnNuevoMovimiento', function() {
         cargarFormulario('#modalNuevo', '#contenidoNuevo');
     });
 
-    $('#btnToggleEstado').click(toggleMovimientos);
+    $(document).on('click', '#btnToggleEstado', toggleMovimientos);
 
     $(document).on('click', '.editar', function(e) {
         e.preventDefault();
@@ -262,6 +316,7 @@ $(document).ready(function() {
         });
     });
 
+    // Manejo de errores de DataTables
     $.fn.dataTable.ext.errMode = 'none';
     $('#movimientos').on('error.dt', function(e, settings, techNote, message) {
         console.error('Error en DataTables:', message);
@@ -269,5 +324,7 @@ $(document).ready(function() {
         inicializarDataTable();
     });
 
+    // Inicialización
+    manejarFormulario();
     inicializarDataTable();
 });
