@@ -16,7 +16,7 @@
 </head>
 <body>
     <div class="d-flex">
-        <?php include '../partials/sidebar.php'; ?>
+        <?php include '../Natys/Assets/partials/sidebar.php'; ?>
         
         <div class="main-content" style="margin-left: 250px; width: calc(100% - 250px); padding: 20px;">
             <?= $content ?>

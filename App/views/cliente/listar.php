@@ -308,3 +308,8 @@ ob_start();
 </body>
 </html>
 
+<?php
+// Al final del archivo listar.php
+$content = ob_get_clean();
+
+include 'Assets/layouts/base.php';

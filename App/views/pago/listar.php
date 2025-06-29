@@ -1,3 +1,11 @@
+<?php
+// Al inicio del archivo listar.php
+ob_start();
+?>
+<?php
+// Al inicio del archivo listar.php
+ob_start();
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -200,3 +208,8 @@
     <script src="../Natys/Assets/js/pago.js"></script>
 </body>
 </html>
+<?php
+// Al final del archivo listar.php
+$content = ob_get_clean();
+
+include 'Assets/layouts/base.php';
