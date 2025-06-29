@@ -55,8 +55,8 @@ CREATE TABLE producto (
 -- Tabla pago
 CREATE TABLE pago (
   id_pago INT NOT NULL AUTO_INCREMENT,
-  banco VARCHAR(50) NOT NULL,
-  referencia VARCHAR(50) NOT NULL,
+  banco VARCHAR(50) NULL,
+  referencia VARCHAR(50) NULL,
   fecha DATE NOT NULL,
   monto DECIMAL(10,2) NOT NULL,
   cod_metodo VARCHAR(10) NOT NULL,

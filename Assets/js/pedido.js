@@ -1,6 +1,7 @@
 $(document).ready(function() {
     let table;
     let mostrandoEliminados = false;
+    let detalles = [];
 
     toastr.options = {
         "closeButton": true,
@@ -50,7 +51,6 @@ $(document).ready(function() {
                     }
                 },
                 { data: 'cant_producto' },
-                { data: 'metodo_pago' },
                 { 
                     data: 'estado',
                     render: function(data) {
@@ -119,9 +119,100 @@ $(document).ready(function() {
         recargarTabla();
     }
 
+    function actualizarTablaProductos() {
+        const tbody = $('#detallesProductos');
+        tbody.empty();
+        
+        let total = 0;
+        
+        detalles.forEach((detalle, index) => {
+            const precio = parseFloat(detalle.precio) || 0;
+            const cantidad = parseInt(detalle.cantidad) || 0;
+            const subtotal = parseFloat(detalle.subtotal) || 0;
+            
+            total += subtotal;
+            
+            tbody.append(`
+                <tr>
+                    <td>${detalle.producto}</td>
+                    <td>$${precio.toFixed(2)}</td>
+                    <td>${cantidad}</td>
+                    <td>$${subtotal.toFixed(2)}</td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-danger btnEliminarProducto" data-index="${index}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `);
+        });
+        
+        $('#total').val(total.toFixed(2));
+        $('#detalles').val(JSON.stringify(detalles));
+    }
+
+    function manejarAgregarProducto() {
+        $('#btnAgregarProducto').off('click').on('click', function() {
+            const productoSelect = $('#productoSelect');
+            const productoOption = productoSelect.find('option:selected');
+            
+            if (!productoOption.val()) {
+                toastr.error('Seleccione un producto válido');
+                return;
+            }
+
+            const cantidad = parseInt($('#cantidadProducto').val());
+            if (isNaN(cantidad) || cantidad < 1) {
+                toastr.error('Ingrese una cantidad válida (mínimo 1)');
+                return;
+            }
+
+            const precio = parseFloat(productoOption.data('precio'));
+            if (isNaN(precio)) {
+                toastr.error('El producto no tiene un precio válido');
+                return;
+            }
+
+            const subtotal = precio * cantidad;
+
+            detalles.push({
+                cod_producto: productoOption.val(),
+                producto: productoOption.data('nombre'),
+                precio: precio,
+                cantidad: cantidad,
+                subtotal: subtotal
+            });
+            
+            actualizarTablaProductos();
+            
+            productoSelect.val('').trigger('change');
+            $('#cantidadProducto').val(1);
+        });
+    }
+
+    function manejarEliminarProducto() {
+        $(document).on('click', '.btnEliminarProducto', function() {
+            const index = $(this).data('index');
+            detalles.splice(index, 1);
+            actualizarTablaProductos();
+        });
+    }
+
+    function inicializarComponentes() {
+        if ($('#clienteSelect').length) {
+            $('#clienteSelect').select2({
+                placeholder: 'Seleccione un cliente',
+                width: '100%'
+            });
+        }
+        
+        if ($('#fechaPedido').length) {
+            $('#fechaPedido').val(new Date().toISOString().substr(0, 10));
+        }
+    }
+
     const cargarFormulario = (modalId, contenidoId, datos = null) => {
         if (datos) {
-            // Para edición, cargar datos del pedido
             $.ajax({
                 url: `index.php?url=pedido&action=formEditar&id_pedido=${datos.id_pedido}`,
                 type: 'GET',
@@ -135,51 +226,20 @@ $(document).ready(function() {
                                 $(contenidoId).html(formHtml);
                                 $(modalId).modal('show');
                                 
-                                // Llenar datos del formulario
                                 const pedido = response.data.pedido;
                                 $('#id_pedido').val(pedido.id_pedido);
-                                $('#fechaPedido').val(pedido.fecha);
+                                $('#fechaPedido').val(pedido.fecha.split(' ')[0]);
                                 $('#clienteSelect').val(pedido.ced_cliente).trigger('change');
-                                $('#metodoPagoSelect').val(pedido.cod_metodo).trigger('change');
-                                $('#banco').val(pedido.banco);
-                                $('#referencia').val(pedido.referencia);
                                 
-                                // Llenar detalles de productos
-                                const detalles = response.data.detalles;
-                                const detallesArray = detalles.map(detalle => ({
-                                    cod_producto: detalle.cod_producto,
-                                    precio: detalle.precio,
-                                    cantidad: detalle.cantidad,
-                                    subtotal: detalle.subtotal
+                                detalles = (response.data.detalles || []).map(detalle => ({
+                                    cod_producto: detalle.cod_producto || '',
+                                    producto: detalle.producto || 'Producto desconocido',
+                                    precio: parseFloat(detalle.precio) || 0,
+                                    cantidad: parseInt(detalle.cantidad) || 0,
+                                    subtotal: parseFloat(detalle.subtotal) || 0
                                 }));
                                 
-                                // Actualizar tabla de productos
-                                const tbody = $('#detallesProductos');
-                                tbody.empty();
-                                
-                                let total = 0;
-                                
-                                detallesArray.forEach((detalle, index) => {
-                                    total += detalle.subtotal;
-                                    
-                                    tbody.append(`
-                                        <tr>
-                                            <td>${detalle.cod_producto} - ${detalle.producto}</td>
-                                            <td>$${detalle.precio.toFixed(2)}</td>
-                                            <td>${detalle.cantidad}</td>
-                                            <td>$${detalle.subtotal.toFixed(2)}</td>
-                                            <td>
-                                                <button type="button" class="btn btn-sm btn-danger btnEliminarProducto" data-index="${index}">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    `);
-                                });
-                                
-                                $('#total').val(total.toFixed(2));
-                                $('#detalles').val(JSON.stringify(detallesArray));
-                                
+                                actualizarTablaProductos();
                                 inicializarComponentes();
                             },
                             error: function(xhr, status, error) {
@@ -197,7 +257,7 @@ $(document).ready(function() {
                 }
             });
         } else {
-            // Para nuevo pedido
+            detalles = [];
             $.ajax({
                 url: 'index.php?url=pedido&action=formNuevo',
                 type: 'GET',
@@ -213,33 +273,6 @@ $(document).ready(function() {
             });
         }
     };
-
-    function inicializarComponentes() {
-        // Inicializar select2 si es necesario
-        if ($('#clienteSelect').length) {
-            $('#clienteSelect').select2({
-                placeholder: 'Seleccione un cliente',
-                width: '100%'
-            });
-        }
-        
-        if ($('#metodoPagoSelect').length) {
-            $('#metodoPagoSelect').select2({
-                placeholder: 'Seleccione un método de pago',
-                width: '100%'
-            });
-        }
-        
-        // Inicializar datepicker si es necesario
-        if ($('#fechaPedido').length) {
-            $('#fechaPedido').datepicker({
-                format: 'yyyy-mm-dd',
-                autoclose: true,
-                todayHighlight: true,
-                language: 'es'
-            });
-        }
-    }
 
     const confirmarAccion = ({ id, url, method, successMessage }) => {
         $.ajax({
@@ -268,6 +301,19 @@ $(document).ready(function() {
             
             const form = this;
             const formData = $(form).serialize();
+            
+            // Validar que haya al menos un producto
+            if(detalles.length === 0) {
+                toastr.error('Debe agregar al menos un producto');
+                return;
+            }
+
+            // Validar cliente seleccionado
+            if($('#clienteSelect').val() === '') {
+                toastr.error('Debe seleccionar un cliente');
+                return;
+            }
+
             const isNew = !form.querySelector('#id_pedido').value;
             const actionUrl = isNew 
                 ? 'index.php?url=pedido&action=guardar' 
@@ -277,7 +323,10 @@ $(document).ready(function() {
                 url: actionUrl,
                 type: 'POST',
                 data: formData,
-                dataType: 'json'
+                dataType: 'json',
+                beforeSend: function() {
+                    $('#formPedido [type="submit"]').prop('disabled', true);
+                }
             })
             .done(response => {
                 if(response.success) {
@@ -287,6 +336,7 @@ $(document).ready(function() {
                     
                     if(isNew) {
                         form.reset();
+                        detalles = [];
                     }
                 } else {
                     toastr.error(response.message);
@@ -294,12 +344,14 @@ $(document).ready(function() {
             })
             .fail((xhr, status, error) => {
                 console.error('Error en la petición:', error, xhr.responseText);
-                toastr.error(`Error en la solicitud: ${error}`);
+                toastr.error(`Error en la solicitud: ${xhr.responseJSON?.message || error}`);
+            })
+            .always(() => {
+                $('#formPedido [type="submit"]').prop('disabled', false);
             });
         });
     };
 
-    // Manejar clic en botón de detalles
     $(document).on('click', '.detalle', function(e) {
         e.preventDefault();
         const idPedido = $(this).data('id');
@@ -319,8 +371,11 @@ $(document).ready(function() {
         });
     });
 
-    // Inicialización
+    inicializarDataTable();
     manejarFormulario();
+    manejarAgregarProducto();
+    manejarEliminarProducto();
+    
     $('#btnNuevoPedido').click(() => {
         cargarFormulario('#modalNuevo', '#contenidoNuevo');
     });
@@ -375,6 +430,7 @@ $(document).ready(function() {
             }
         });
     });
+    
 
     $(document).on('click', '.restaurar', function(e) {
         e.preventDefault();
@@ -403,60 +459,10 @@ $(document).ready(function() {
         });
     });
 
-    // Manejar errores de DataTables
     $.fn.dataTable.ext.errMode = 'none';
     $('#pedidos').on('error.dt', function(e, settings, techNote, message) {
         console.error('Error en DataTables:', message);
         toastr.error('Error al cargar los datos de la tabla');
         inicializarDataTable();
     });
-function actualizarResumen() {
-    const productos = table.rows().data().toArray();
-    const cantidad = productos.reduce((sum, producto) => sum + producto.cantidad, 0);
-    const subtotal = productos.reduce((sum, producto) => sum + producto.subtotal, 0);
-    
-    $('#cantidad-productos').text(cantidad);
-    $('#subtotal').text(`$${subtotal.toFixed(2)}`);
-    $('#total').text(`$${subtotal.toFixed(2)}`);
-}
-
-// Modificar la renderización de las filas
-columns: [
-    { 
-        data: 'nombre',
-        render: function(data, type, row) {
-            return `
-                <div class="d-flex align-items-center">
-                    <img src="assets/img/productos/${row.cod_producto}.jpg" 
-                         class="img-thumbnail me-3" 
-                         style="width: 60px; height: 60px; object-fit: cover;"
-                         onerror="this.src='assets/img/productos/default.jpg'">
-                    <div>
-                        <h6 class="mb-0">${data}</h6>
-                        <small class="text-muted">Código: ${row.cod_producto}</small>
-                    </div>
-                </div>
-            `;
-        }
-    },
-    { 
-        data: 'precio',
-        render: function(data) {
-            return `$${parseFloat(data).toFixed(2)}`;
-        }
-    },
-    {
-        data: 'cantidad',
-        render: function(data, type, row) {
-            return `
-                <div class="input-group input-group-sm" style="width: 120px;">
-                    <button class="btn btn-outline-secondary btn-minus" type="button" data-id="${row.id_pedido}">-</button>
-                    <input type="number" class="form-control text-center" value="${data}" min="1">
-                    <button class="btn btn-outline-secondary btn-plus" type="button" data-id="${row.id_pedido}">+</button>
-                </div>
-            `;
-        }
-    },
-    // ... resto de columnas
-]
 });

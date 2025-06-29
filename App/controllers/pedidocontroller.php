@@ -2,13 +2,10 @@
 use App\Natys\models\Pedido;
 use App\Natys\models\Cliente;
 use App\Natys\models\Producto;
-use App\Natys\models\Metodo;
-use App\Natys\models\Pago;
 
 $pedido = new Pedido();
 $cliente = new Cliente();
 $producto = new Producto();
-$metodo = new Metodo();
 
 $action = $_REQUEST['action'] ?? 'listar';
 
@@ -16,10 +13,8 @@ switch ($action) {
     case 'formNuevo':
         $clientes = $cliente->listar();
         $productos = $producto->listar();
-        $metodos = $metodo->listar();
         
-        // Generar formulario directamente
-        echo generarFormularioPedido($clientes, $productos, $metodos);
+        echo generarFormularioPedido($clientes, $productos);
         break;
 
     case 'formEditar':
@@ -30,6 +25,16 @@ switch ($action) {
             $detalles = $pedido->obtenerDetalles($id_pedido);
             
             if ($datos) {
+                $detalles = array_map(function($detalle) {
+                    return [
+                        'cod_producto' => $detalle['cod_producto'],
+                        'producto' => $detalle['producto'],
+                        'precio' => (float)$detalle['precio'],
+                        'cantidad' => (int)$detalle['cantidad'],
+                        'subtotal' => (float)$detalle['subtotal']
+                    ];
+                }, $detalles);
+
                 echo json_encode([
                     'success' => true,
                     'message' => 'Datos del pedido cargados',
@@ -56,29 +61,19 @@ switch ($action) {
     case 'guardar':
         header('Content-Type: application/json');
         try {
-            if (!isset($_POST['fecha'], $_POST['cliente'], $_POST['metodo_pago'], $_POST['detalles'])) {
-                throw new Exception('Faltan datos requeridos');
+            if (!isset($_POST['fecha'], $_POST['cliente'], $_POST['detalles'], $_POST['total'])) {
+                throw new Exception('Faltan datos requeridos: fecha, cliente, detalles o total');
             }
 
-            // Procesar pago
-            $pago = new Pago();
-            $pago->banco = $_POST['banco'] ?? '';
-            $pago->referencia = $_POST['referencia'] ?? '';
-            $pago->fecha = $_POST['fecha'];
-            $pago->monto = $_POST['total'];
-            $pago->cod_metodo = $_POST['metodo_pago'];
-            
-            // Guardar pago
-            $pago->guardar();
-            $id_pago = $pago->conn->lastInsertId();
-
-            // Procesar pedido
-            $pedido->fecha = $_POST['fecha'];
-            $pedido->total = $_POST['total'];
             $detallesArray = json_decode($_POST['detalles'], true);
+            if (!is_array($detallesArray) || empty($detallesArray)) {
+                throw new Exception('Debe agregar al menos un producto');
+            }
+
+            $pedido->fecha = $_POST['fecha'];
+            $pedido->total = (float)$_POST['total'];
             $pedido->cant_producto = array_sum(array_column($detallesArray, 'cantidad'));
             $pedido->ced_cliente = $_POST['cliente'];
-            $pedido->id_pago = $id_pago;
 
             if ($pedido->guardar($detallesArray)) {
                 echo json_encode([
@@ -102,34 +97,25 @@ switch ($action) {
     case 'actualizar':
         header('Content-Type: application/json');
         try {
-            if (!isset($_POST['id_pedido'], $_POST['fecha'], $_POST['cliente'], $_POST['metodo_pago'], $_POST['detalles'])) {
+            if (!isset($_POST['id_pedido'], $_POST['fecha'], $_POST['cliente'], $_POST['detalles'], $_POST['total'])) {
                 throw new Exception('Faltan datos requeridos');
             }
 
-            // Obtener pedido existente
             $pedidoExistente = $pedido->obtenerPedido($_POST['id_pedido']);
             if (!$pedidoExistente) {
                 throw new Exception('Pedido no encontrado');
             }
 
-            // Actualizar pago
-            $pago = new Pago();
-            $pago->id_pago = $pedidoExistente['id_pago'];
-            $pago->banco = $_POST['banco'] ?? '';
-            $pago->referencia = $_POST['referencia'] ?? '';
-            $pago->fecha = $_POST['fecha'];
-            $pago->monto = $_POST['total'];
-            $pago->cod_metodo = $_POST['metodo_pago'];
-            $pago->actualizar();
+            $detallesArray = json_decode($_POST['detalles'], true);
+            if (!is_array($detallesArray) || empty($detallesArray)) {
+                throw new Exception('Debe agregar al menos un producto');
+            }
 
-            // Actualizar pedido
             $pedido->id_pedido = $_POST['id_pedido'];
             $pedido->fecha = $_POST['fecha'];
-            $pedido->total = $_POST['total'];
-            $detallesArray = json_decode($_POST['detalles'], true);
+            $pedido->total = (float)$_POST['total'];
             $pedido->cant_producto = array_sum(array_column($detallesArray, 'cantidad'));
             $pedido->ced_cliente = $_POST['cliente'];
-            $pedido->id_pago = $pedidoExistente['id_pago'];
 
             if ($pedido->actualizar($detallesArray)) {
                 echo json_encode([
@@ -201,7 +187,7 @@ switch ($action) {
         break;
 }
 
-function generarFormularioPedido($clientes, $productos, $metodos) {
+function generarFormularioPedido($clientes, $productos) {
     ob_start();
     ?>
     <div class="modal-body">
@@ -216,36 +202,15 @@ function generarFormularioPedido($clientes, $productos, $metodos) {
                 
                 <div class="col-md-6">
                     <label for="clienteSelect" class="form-label">Cliente</label>
-                    <select class="form-select" id="clienteSelect" name="cliente" required>
-                        <option value="">Seleccione un cliente</option>
-                        <?php foreach ($clientes as $cliente): ?>
-                            <option value="<?= $cliente['ced_cliente'] ?>"><?= $cliente['nomcliente'] ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-            </div>
-            
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label for="metodoPagoSelect" class="form-label">Método de Pago</label>
-                    <select class="form-select" id="metodoPagoSelect" name="metodo_pago" required>
-                        <option value="">Seleccione un método</option>
-                        <?php foreach ($metodos as $metodo): ?>
-                            <option value="<?= $metodo['codigo'] ?>"><?= $metodo['detalle'] ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                
-                <div class="col-md-6" id="bancoContainer" style="display: none;">
-                    <label for="banco" class="form-label">Banco</label>
-                    <input type="text" class="form-control" id="banco" name="banco">
-                </div>
-            </div>
-            
-            <div class="row mb-3" id="referenciaContainer" style="display: none;">
-                <div class="col-md-6">
-                    <label for="referencia" class="form-label">Referencia</label>
-                    <input type="text" class="form-control" id="referencia" name="referencia">
+<select class="form-select" id="ClienteSelect" style="width: 60%;">
+    <option value="">Seleccione un Cliente</option>
+    <?php foreach ($clientes as $cliente): ?>
+        <option value="<?= htmlspecialchars($cliente['ced_cliente']) ?>" 
+                data-nombre="<?= htmlspecialchars($cliente['nomcliente']) ?>">
+            <?= htmlspecialchars($cliente['nomcliente']) ?>
+        </option>
+    <?php endforeach; ?>
+</select>
                 </div>
             </div>
             
@@ -281,10 +246,10 @@ function generarFormularioPedido($clientes, $productos, $metodos) {
                         <select class="form-select" id="productoSelect" style="width: 60%;">
                             <option value="">Seleccione un producto</option>
                             <?php foreach ($productos as $producto): ?>
-                                <option value="<?= $producto['cod_producto'] ?>" 
-                                        data-precio="<?= $producto['precio'] ?>"
-                                        data-nombre="<?= $producto['nombre'] ?>">
-                                    <?= $producto['nombre'] ?> - $<?= number_format($producto['precio'], 2) ?>
+                                <option value="<?= htmlspecialchars($producto['cod_producto']) ?>" 
+                                        data-precio="<?= (float)$producto['precio'] ?>"
+                                        data-nombre="<?= htmlspecialchars($producto['nombre']) ?>">
+                                    <?= htmlspecialchars($producto['nombre']) ?> - $<?= number_format($producto['precio'], 2) ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
@@ -309,48 +274,38 @@ function generarFormularioPedido($clientes, $productos, $metodos) {
 
     <script>
     $(document).ready(function() {
-        // Mostrar/ocultar campos según método de pago
-        $('#metodoPagoSelect').change(function() {
-            const metodo = $(this).val();
-            const esTransferencia = metodo === 'TRANSF';
-            
-            $('#bancoContainer, #referenciaContainer').toggle(esTransferencia);
-            
-            if (!esTransferencia) {
-                $('#banco, #referencia').val('');
-            }
-        });
-        
-        // Manejar agregar productos
         const detalles = [];
         
         $('#btnAgregarProducto').click(function() {
             const productoSelect = $('#productoSelect');
-            const productoId = productoSelect.val();
-            const productoNombre = productoSelect.find('option:selected').data('nombre');
-            const productoPrecio = productoSelect.find('option:selected').data('precio');
-            const cantidad = $('#cantidadProducto').val();
+            const productoOption = productoSelect.find('option:selected');
             
-            if (!productoId || !cantidad || cantidad < 1) {
-                toastr.error('Seleccione un producto y una cantidad válida');
+            if (!productoOption.val()) {
+                toastr.error('Seleccione un producto válido');
                 return;
             }
+
+            const precio = parseFloat(productoOption.data('precio')) || 0;
+            const cantidad = parseInt($('#cantidadProducto').val()) || 0;
             
-            const subtotal = productoPrecio * cantidad;
+            if (cantidad < 1) {
+                toastr.error('La cantidad debe ser al menos 1');
+                return;
+            }
+
+            const subtotal = precio * cantidad;
             
-            // Agregar a la lista de detalles
             detalles.push({
-                cod_producto: productoId,
-                precio: productoPrecio,
+                cod_producto: productoOption.val(),
+                producto: productoOption.data('nombre'),
+                precio: precio,
                 cantidad: cantidad,
                 subtotal: subtotal
             });
             
-            // Actualizar tabla
             actualizarTablaProductos();
             
-            // Limpiar selección
-            productoSelect.val('');
+            productoSelect.val('').trigger('change');
             $('#cantidadProducto').val(1);
         });
         
@@ -361,14 +316,18 @@ function generarFormularioPedido($clientes, $productos, $metodos) {
             let total = 0;
             
             detalles.forEach((detalle, index) => {
-                total += detalle.subtotal;
+                const precio = parseFloat(detalle.precio) || 0;
+                const cantidad = parseInt(detalle.cantidad) || 0;
+                const subtotal = parseFloat(detalle.subtotal) || 0;
+                
+                total += subtotal;
                 
                 tbody.append(`
                     <tr>
-                        <td>${detalle.cod_producto} - ${$('#productoSelect option[value="' + detalle.cod_producto + '"]').data('nombre')}</td>
-                        <td>$${detalle.precio.toFixed(2)}</td>
-                        <td>${detalle.cantidad}</td>
-                        <td>$${detalle.subtotal.toFixed(2)}</td>
+                        <td>${detalle.producto}</td>
+                        <td>$${precio.toFixed(2)}</td>
+                        <td>${cantidad}</td>
+                        <td>$${subtotal.toFixed(2)}</td>
                         <td>
                             <button type="button" class="btn btn-sm btn-danger btnEliminarProducto" data-index="${index}">
                                 <i class="fas fa-trash"></i>
@@ -382,7 +341,6 @@ function generarFormularioPedido($clientes, $productos, $metodos) {
             $('#detalles').val(JSON.stringify(detalles));
         }
         
-        // Eliminar producto de la lista
         $(document).on('click', '.btnEliminarProducto', function() {
             const index = $(this).data('index');
             detalles.splice(index, 1);

@@ -1,3 +1,8 @@
+<?php
+// Al inicio del archivo listar.php
+ob_start();
+?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -302,3 +307,4 @@
     <script src="../Natys/Assets/js/cliente.js"></script>
 </body>
 </html>
+
