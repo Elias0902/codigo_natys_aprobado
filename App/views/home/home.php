@@ -102,7 +102,7 @@ ob_start();
     <!-- Llamado a la acción -->
     <div class="row bg-primary text-white p-5 rounded mb-5">
         <div class="col-md-8">
-            <h3>¿Listo para probar una experiencia galleta única?</h3>
+            <h3>¿Listo para probar una experiencia de galletas únicas?</h3>
             <p class="lead">Visítanos hoy y disfruta de nuestro 10% de descuento en tu primer pedido.</p>
         </div>
         <div class="col-md-4 text-right d-flex align-items-center justify-content-end">

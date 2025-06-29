@@ -20,6 +20,11 @@
     </div>
     <ul class="nav flex-column">
         <li class="nav-item">
+            <a href="index.php?url=perfil" class="nav-link text-warning <?= strpos($_SERVER['REQUEST_URI'], 'perfil') !== false ? 'active bg-secondary' : '' ?>">
+                <i class="fas fa-user me-2"></i>Perfil
+            </a>
+        </li>
+        <li class="nav-item">
             <a href="index.php?url=cliente" class="nav-link text-white <?= strpos($_SERVER['REQUEST_URI'], 'cliente') !== false ? 'active bg-primary' : '' ?>">
                 <i class="fas fa-users me-2"></i>Clientes
             </a>
