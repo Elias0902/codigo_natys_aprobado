@@ -18,7 +18,7 @@
                 
                 echo "Error 404: la url no existe";
                 
-                die("<script>location='?url=home'</script>");
+                die("<script>location='?url=error404'</script>");
             }
         }
 
@@ -30,7 +30,7 @@
 } else {
 
     echo "Error 404: controlador no encontrado";
-    die("<script>location='?url=home'</script>");
+    die("<script>location='?url=error404'</script>");
 }
         }
 
