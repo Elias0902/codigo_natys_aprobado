@@ -86,7 +86,7 @@ ob_start();
         </div>
         
         <br>
-        <a href="index.php" class="btn btn-secondary">
+        <a href="index.php?url=home" class="btn btn-secondary">
             <i class="fas fa-home me-2"></i>Menú Principal
         </a>
     </div>

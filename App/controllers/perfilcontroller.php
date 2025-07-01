@@ -19,7 +19,6 @@ switch ($action) {
                     'message' => 'Datos del perfil cargados',
                     'data' => [
                         'id' => $datos['id'],
-                        'nombre_usuario' => $datos['nombre_usuario'],
                         'correo_usuario' => $datos['correo_usuario'],
                         'usuario' => $datos['usuario'],
                         'rol' => $datos['rol']
@@ -42,10 +41,9 @@ switch ($action) {
 
     case 'actualizar':
         header('Content-Type: application/json');
-        if (isset($_POST['id'], $_POST['nombre_usuario'], $_POST['correo_usuario'], $_POST['usuario'], $_POST['rol'])) {
+        if (isset($_POST['id'], $_POST['correo_usuario'], $_POST['usuario'], $_POST['rol'])) {
             $perfil = new Perfil();
             $perfil->id = $_POST['id'];
-            $perfil->nombre_usuario = $_POST['nombre_usuario'];
             $perfil->correo_usuario = $_POST['correo_usuario'];
             $perfil->usuario = $_POST['usuario'];
             $perfil->rol = $_POST['rol'];
@@ -62,7 +60,6 @@ switch ($action) {
                     'message' => 'Perfil actualizado exitosamente',
                     'data' => [
                         'id' => $perfil->id,
-                        'nombre_usuario' => $perfil->nombre_usuario,
                         'correo_usuario' => $perfil->correo_usuario,
                         'usuario' => $perfil->usuario,
                         'rol' => $perfil->rol

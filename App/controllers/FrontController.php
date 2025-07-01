@@ -16,7 +16,7 @@
 
             } else {
                 
-                echo "Error 404: la url no existe";
+                echo "Por Favor Espere, estamos redirigiendo....";
                 
                 die("<script>location='?url=login'</script>");
             }

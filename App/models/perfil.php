@@ -6,7 +6,6 @@ use PDO;
 
 class Perfil extends Conexion {
     public $id;
-    public $nombre_usuario;
     public $correo_usuario;
     public $usuario;
     public $clave;
@@ -18,14 +17,14 @@ class Perfil extends Conexion {
     }
 
     public function listar() {
-        $query = "SELECT id, nombre_usuario, correo_usuario, usuario, rol FROM usuario";
+        $query = "SELECT id, correo_usuario, usuario, rol FROM usuario";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function obtenerPerfil($id) {
-        $query = "SELECT id, nombre_usuario, correo_usuario, usuario, rol FROM usuario WHERE id = :id LIMIT 1";
+        $query = "SELECT id, correo_usuario, usuario, rol FROM usuario WHERE id = :id LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":id", $id);
         $stmt->execute();
@@ -34,8 +33,7 @@ class Perfil extends Conexion {
 
     public function actualizar() {
         if (!empty($this->clave)) {
-            $query = "UPDATE usuario SET 
-                      nombre_usuario = :nombre_usuario, 
+            $query = "UPDATE usuario SET  
                       correo_usuario = :correo_usuario, 
                       usuario = :usuario, 
                       clave = :clave, 
@@ -45,7 +43,6 @@ class Perfil extends Conexion {
             $stmt->bindParam(":clave", $this->clave);
         } else {
             $query = "UPDATE usuario SET 
-                      nombre_usuario = :nombre_usuario, 
                       correo_usuario = :correo_usuario, 
                       usuario = :usuario, 
                       rol = :rol 
@@ -53,7 +50,6 @@ class Perfil extends Conexion {
             $stmt = $this->conn->prepare($query);
         }
 
-        $stmt->bindParam(":nombre_usuario", $this->nombre_usuario);
         $stmt->bindParam(":correo_usuario", $this->correo_usuario);
         $stmt->bindParam(":usuario", $this->usuario);
         $stmt->bindParam(":rol", $this->rol);

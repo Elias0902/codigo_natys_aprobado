@@ -23,9 +23,8 @@ ob_start();
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Nombre</th>
-                        <th>Correo</th>
                         <th>Usuario</th>
+                        <th>Correo</th>
                         <th>Rol</th>
                         <th>Acciones</th>
                     </tr>
@@ -34,9 +33,8 @@ ob_start();
                     <?php foreach ($perfiles as $perfil): ?>
                         <tr>
                             <td><?php echo htmlspecialchars($perfil['id']); ?></td>
-                            <td><?php echo htmlspecialchars($perfil['nombre_usuario']); ?></td>
-                            <td><?php echo htmlspecialchars($perfil['correo_usuario']); ?></td>
                             <td><?php echo htmlspecialchars($perfil['usuario']); ?></td>
+                            <td><?php echo htmlspecialchars($perfil['correo_usuario']); ?></td>
                             <td><?php echo htmlspecialchars($perfil['rol']); ?></td>
                             <td>
                                 <button class="btn btn-sm btn-primary editar" data-id="<?php echo $perfil['id']; ?>">
@@ -50,7 +48,7 @@ ob_start();
         </div>
         
         <br>
-        <a href="index.php" class="btn btn-secondary">
+        <a href="index.php?url=home" class="btn btn-secondary">
             <i class="fas fa-home me-2"></i>Menú Principal
         </a>
     </div>
@@ -81,22 +79,6 @@ ob_start();
         <div class="container-fluid p-0">
             <form id="formPerfil" class="needs-validation" novalidate>
                 <input type="hidden" name="id" id="id">
-                
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="nombre_usuario" class="form-label">
-                            <i class="fas fa-user me-1"></i>Nombre Completo *
-                        </label>
-                        <input type="text" 
-                               class="form-control" 
-                               id="nombre_usuario" 
-                               name="nombre_usuario" 
-                               placeholder="Ingrese el nombre completo"
-                               required>
-                        <div class="invalid-feedback">
-                            Por favor ingrese el nombre completo
-                        </div>
-                    </div>
                     
                     <div class="col-md-6 mb-3">
                         <label for="correo_usuario" class="form-label">
