@@ -18,7 +18,7 @@
                 
                 echo "Error 404: la url no existe";
                 
-                die("<script>location='?url=error404'</script>");
+                die("<script>location='?url=login'</script>");
             }
         }
 

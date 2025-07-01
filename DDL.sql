@@ -19,7 +19,7 @@ CREATE TABLE usuario (
 );
 
 -- Inserción de usuario de ejemplo
-INSERT INTO usuarios (nombre_usuario, correo_usuario, usuario, clave, rol, estado)
+INSERT INTO usuario (nombre_usuario, correo_usuario, usuario, clave, rol, estado)
 VALUES ('elias123', 'elias123', 'elias123', 'elias123', 'admin', 1);
 
 
