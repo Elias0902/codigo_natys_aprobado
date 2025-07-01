@@ -10,13 +10,12 @@ $action = $_REQUEST['action'] ?? 'mostrarFormulario';
 switch ($action) {
     case 'autenticar':
     if (empty($_POST['usuario']) || empty($_POST['clave'])) {
-        // Para solicitudes AJAX
+
         if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'Usuario y contraseña son requeridos']);
             exit;
         } else {
-            // Para envíos de formulario tradicional
             $_SESSION['error_login'] = 'Usuario y contraseña son requeridos';
             header('Location: index.php?url=login&action=mostrarFormulario');
             exit;
@@ -31,27 +30,23 @@ switch ($action) {
     if ($usuario && $login->verificarClave($usuario['clave'], $login->clave)) {
         $_SESSION['usuario'] = [
             'id' => $usuario['id'],
-            'nombre' => $usuario['nombre_usuario'],
             'usuario' => $usuario['usuario'],
             'rol' => $usuario['rol']
         ];
-        
-        // Para solicitudes AJAX
+
         if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
             header('Content-Type: application/json');
             echo json_encode(['success' => true, 'redirect' => 'index.php?url=home']);
         } else {
-            // Para envíos de formulario tradicional
             header('Location: index.php?url=home');
         }
         exit;
     } else {
-        // Para solicitudes AJAX
+
         if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'Usuario o contraseña incorrectos']);
         } else {
-            // Para envíos de formulario tradicional
             $_SESSION['error_login'] = 'Usuario o contraseña incorrectos';
             header('Location: index.php?url=login&action=mostrarFormulario');
         }
@@ -79,12 +74,11 @@ switch ($action) {
         $usuario = $login->obtenerUsuarioPorCorreo();
 
         if ($usuario) {
-            // En producción, aquí enviarías un correo con un token único
-            // Para este ejemplo, simulamos el envío
+
             echo json_encode([
                 'success' => true, 
                 'message' => 'Se ha enviado un enlace de recuperación a tu correo',
-                'usuario' => $usuario['usuario'] // Solo para demostración
+                'usuario' => $usuario['usuario'] 
             ]);
         } else {
             echo json_encode(['success' => false, 'message' => 'Correo no registrado']);

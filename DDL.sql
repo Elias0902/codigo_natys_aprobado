@@ -10,17 +10,17 @@ USE natys;
 -- Tabla usuario
 CREATE TABLE usuario (
   id INT NOT NULL AUTO_INCREMENT,
-  nombre_usuario VARCHAR(70) NOT NULL,
   correo_usuario VARCHAR(70) NOT NULL,
   usuario VARCHAR(45) NOT NULL,
   clave VARCHAR(50) NOT NULL,
   rol VARCHAR(30) NOT NULL COMMENT 'Ej: admin, vendedor',
+   estado TINYINT(4) NOT NULL DEFAULT 1 COMMENT '0=Inactivo, 1=Activo',
   PRIMARY KEY (id)
 );
 
 -- Inserción de usuario de ejemplo
 INSERT INTO usuario (nombre_usuario, correo_usuario, usuario, clave, rol, estado)
-VALUES ('elias123', 'elias123', 'elias123', 'elias123', 'admin', 1);
+VALUES ('elias123', 'elias123', 'elias123', 'admin', 1);
 
 
 -- Tabla cliente

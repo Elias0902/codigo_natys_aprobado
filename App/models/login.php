@@ -15,7 +15,7 @@ class Login extends Conexion {
     }
 
     public function validarUsuario() {
-        $query = "SELECT id, nombre_usuario, usuario, clave, rol FROM usuario 
+        $query = "SELECT id, usuario, clave, rol FROM usuario 
                  WHERE usuario = :usuario AND estado = 1 LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":usuario", $this->usuario);
@@ -24,7 +24,6 @@ class Login extends Conexion {
     }
 
     public function verificarClave($claveAlmacenada, $claveIngresada) {
-        // Comparación simple (mejoraría con password_hash() en producción)
         return $claveAlmacenada === $claveIngresada;
     }
 
