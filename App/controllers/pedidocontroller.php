@@ -1,4 +1,5 @@
 <?php
+require_once 'App/Helpers/auth_check.php';
 use App\Natys\models\Pedido;
 use App\Natys\models\Cliente;
 use App\Natys\models\Producto;

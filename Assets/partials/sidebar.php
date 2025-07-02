@@ -49,6 +49,12 @@
                 <i class="fas fa-exchange-alt me-2"></i>Movimientos
             </a>
         </li>
+        <!-- Botón de Cerrar Sesión -->
+        <li class="nav-item mt-auto">
+            <a href="index.php?url=login&action=cerrarSesion" class="nav-link text-danger">
+                <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+            </a>
+        </li>
     </ul>
 </div>
 
@@ -83,6 +89,11 @@
 .sidebar .nav-link.active {
     font-weight: bold;
     background-color: #0d6efd !important;
+}
+
+/* Estilo específico para el botón de cerrar sesión */
+.sidebar .nav-link.text-danger:hover {
+    background-color: rgba(220, 53, 69, 0.2);
 }
 
 .main-content {

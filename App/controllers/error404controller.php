@@ -1,5 +1,5 @@
 <?php
-// Obtener la acción solicitada, con valor por defecto 'index'
+require_once 'App/Helpers/auth_check.php';
 $action = $_REQUEST['action'] ?? 'index';
 
 // Manejar las diferentes acciones
