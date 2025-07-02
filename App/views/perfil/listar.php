@@ -8,19 +8,46 @@ ob_start();
     <meta charset="UTF-8">
     <title>Gestión de Perfiles</title>
     <link rel="icon" href="../Natys/Assets/img/natys.png" type="image/x-icon">
-    <link rel="stylesheet" href="Assets/css/listar.css">
+    <link rel="stylesheet" href="Assets/css/gperfil.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <style>
+        .table-responsive {
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .badge-admin {
+            background-color: #dc3545;
+        }
+        .badge-vendedor {
+            background-color: #fd7e14;
+        }
+        .btn-actions {
+            min-width: 100px;
+        }
+    </style>
 </head>
 <body>
     <div class="container-fluid py-4">
-        <h1 class="mb-4" style="text-align: center;">Gestión de Perfiles</h1>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="mb-0"><i class="fas fa-users-cog me-2"></i>Gestión de Usuarios</h1>
+            <div>
+                <a href="index.php?url=perfil&action=miperfil" class="btn btn-secondary me-2">
+                    <i class="fas fa-user me-1"></i>Mi Perfil
+                </a>
+                <a href="index.php?url=home" class="btn btn-outline-secondary">
+                    <i class="fas fa-home me-1"></i>Inicio
+                </a>
+            </div>
+        </div>
 
-        <div class="table-responsive" style="text-align:center;">
-            <table id="perfiles" class="table table-striped" style="margin: 0 auto; text-align: center;">
-                <thead>
+        <div class="table-responsive">
+            <table id="perfiles" class="table table-striped table-hover">
+                <thead class="table-primary">
                     <tr>
                         <th>ID</th>
                         <th>Usuario</th>
@@ -35,10 +62,14 @@ ob_start();
                             <td><?php echo htmlspecialchars($perfil['id']); ?></td>
                             <td><?php echo htmlspecialchars($perfil['usuario']); ?></td>
                             <td><?php echo htmlspecialchars($perfil['correo_usuario']); ?></td>
-                            <td><?php echo htmlspecialchars($perfil['rol']); ?></td>
                             <td>
-                                <button class="btn btn-sm btn-primary editar" data-id="<?php echo $perfil['id']; ?>">
-                                    <i class="fas fa-edit"></i> Editar
+                                <span class="badge rounded-pill <?php echo $perfil['rol'] === 'admin' ? 'bg-danger' : 'bg-warning text-dark'; ?>">
+                                    <?php echo htmlspecialchars(ucfirst($perfil['rol'])); ?>
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-primary editar btn-actions" data-id="<?php echo $perfil['id']; ?>">
+                                    <i class="fas fa-edit me-1"></i>Editar
                                 </button>
                             </td>
                         </tr>
@@ -46,13 +77,9 @@ ob_start();
                 </tbody>
             </table>
         </div>
-        
-        <br>
-        <a href="index.php?url=home" class="btn btn-secondary">
-            <i class="fas fa-home me-2"></i>Menú Principal
-        </a>
     </div>
 
+    <!-- Modal Editar -->
     <div class="modal fade" id="modalEditar" tabindex="-1" aria-labelledby="modalEditarLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
@@ -79,7 +106,8 @@ ob_start();
         <div class="container-fluid p-0">
             <form id="formPerfil" class="needs-validation" novalidate>
                 <input type="hidden" name="id" id="id">
-                    
+                
+                <div class="row">
                     <div class="col-md-6 mb-3">
                         <label for="correo_usuario" class="form-label">
                             <i class="fas fa-envelope me-1"></i>Correo Electrónico *
@@ -94,9 +122,7 @@ ob_start();
                             Por favor ingrese un correo electrónico válido
                         </div>
                     </div>
-                </div>
-                
-                <div class="row">
+                    
                     <div class="col-md-6 mb-3">
                         <label for="usuario" class="form-label">
                             <i class="fas fa-user-tag me-1"></i>Nombre de Usuario *
@@ -111,7 +137,9 @@ ob_start();
                             Por favor ingrese el nombre de usuario
                         </div>
                     </div>
-                    
+                </div>
+                
+                <div class="row">
                     <div class="col-md-6 mb-3">
                         <label for="rol" class="form-label">
                             <i class="fas fa-user-shield me-1"></i>Rol *
@@ -125,19 +153,19 @@ ob_start();
                             Por favor seleccione un rol
                         </div>
                     </div>
-                </div>
-                
-                <div class="mb-4">
-                    <label for="clave" class="form-label">
-                        <i class="fas fa-key me-1"></i>Nueva Contraseña (opcional)
-                    </label>
-                    <input type="password" 
-                           class="form-control" 
-                           id="clave" 
-                           name="clave" 
-                           placeholder="Dejar en blanco para no cambiar">
-                    <div class="form-text">
-                        Solo complete si desea cambiar la contraseña
+                    
+                    <div class="col-md-6 mb-3">
+                        <label for="clave" class="form-label">
+                            <i class="fas fa-key me-1"></i>Nueva Contraseña (opcional)
+                        </label>
+                        <input type="password" 
+                               class="form-control" 
+                               id="clave" 
+                               name="clave" 
+                               placeholder="Dejar en blanco para no cambiar">
+                        <div class="form-text">
+                            Solo complete si desea cambiar la contraseña
+                        </div>
                     </div>
                 </div>
                 
@@ -158,7 +186,92 @@ ob_start();
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-    <script src="../Natys/Assets/js/perfil.js"></script>
+    <script>
+    $(document).ready(function() {
+        // Inicializar DataTable
+        $('#perfiles').DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
+            },
+            responsive: true
+        });
+        
+        // Manejar clic en botón editar
+        $('.editar').click(function() {
+            const id = $(this).data('id');
+            $('#modalEditar').modal('show');
+            
+            // Cargar datos del perfil
+            $.ajax({
+                url: 'index.php?url=perfil&action=formEditar&id=' + id,
+                method: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        const template = $('#templateFormularioPerfil').html();
+                        $('#contenidoEditar').html(template);
+                        
+                        // Rellenar formulario
+                        $('#id').val(response.data.id);
+                        $('#correo_usuario').val(response.data.correo_usuario);
+                        $('#usuario').val(response.data.usuario);
+                        $('#rol').val(response.data.rol);
+                        
+                        // Configurar validación
+                        const form = document.getElementById('formPerfil');
+                        
+                        form.addEventListener('submit', function(e) {
+                            e.preventDefault();
+                            if (!form.checkValidity()) {
+                                e.stopPropagation();
+                                form.classList.add('was-validated');
+                                return;
+                            }
+                            
+                            $.ajax({
+                                url: 'index.php?url=perfil&action=actualizar',
+                                method: 'POST',
+                                data: $(form).serialize(),
+                                success: function(response) {
+                                    if (response.success) {
+                                        toastr.success(response.message);
+                                        $('#modalEditar').modal('hide');
+                                        setTimeout(() => {
+                                            location.reload();
+                                        }, 1500);
+                                    } else {
+                                        toastr.error(response.message);
+                                    }
+                                },
+                                error: function() {
+                                    toastr.error('Error al actualizar el perfil');
+                                }
+                            });
+                        });
+                    } else {
+                        toastr.error(response.message);
+                        $('#modalEditar').modal('hide');
+                    }
+                },
+                error: function() {
+                    toastr.error('Error al cargar los datos del perfil');
+                    $('#modalEditar').modal('hide');
+                }
+            });
+        });
+        
+        // Resetear modal al cerrar
+        $('#modalEditar').on('hidden.bs.modal', function () {
+            $('#contenidoEditar').html(`
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Cargando información del perfil...</p>
+                </div>
+            `);
+        });
+    });
+    </script>
 </body>
 </html>
 

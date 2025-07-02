@@ -17,14 +17,14 @@ class Perfil extends Conexion {
     }
 
     public function listar() {
-        $query = "SELECT id, correo_usuario, usuario, rol FROM usuario";
+        $query = "SELECT id, correo_usuario, usuario, rol FROM usuario WHERE estado = 1";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function obtenerPerfil($id) {
-        $query = "SELECT id, correo_usuario, usuario, rol FROM usuario WHERE id = :id LIMIT 1";
+        $query = "SELECT id, correo_usuario, usuario, rol FROM usuario WHERE id = :id AND estado = 1 LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":id", $id);
         $stmt->execute();
@@ -38,7 +38,7 @@ class Perfil extends Conexion {
                       usuario = :usuario, 
                       clave = :clave, 
                       rol = :rol 
-                      WHERE id = :id";
+                      WHERE id = :id AND estado = 1";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(":clave", $this->clave);
         } else {
@@ -46,7 +46,7 @@ class Perfil extends Conexion {
                       correo_usuario = :correo_usuario, 
                       usuario = :usuario, 
                       rol = :rol 
-                      WHERE id = :id";
+                      WHERE id = :id AND estado = 1";
             $stmt = $this->conn->prepare($query);
         }
 
@@ -54,6 +54,27 @@ class Perfil extends Conexion {
         $stmt->bindParam(":usuario", $this->usuario);
         $stmt->bindParam(":rol", $this->rol);
         $stmt->bindParam(":id", $this->id);
+        
+        return $stmt->execute();
+    }
+
+    public function cambiarClave($id, $claveActual, $nuevaClave) {
+        // Verificar contraseña actual
+        $query = "SELECT clave FROM usuario WHERE id = :id AND estado = 1 LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $id);
+        $stmt->execute();
+        $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$usuario || $usuario['clave'] !== $claveActual) {
+            return false;
+        }
+
+        // Actualizar contraseña
+        $query = "UPDATE usuario SET clave = :clave WHERE id = :id AND estado = 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":clave", $nuevaClave);
+        $stmt->bindParam(":id", $id);
         
         return $stmt->execute();
     }

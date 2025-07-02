@@ -1,12 +1,42 @@
 <?php
 require_once 'App/Helpers/auth_check.php';
-use App\Natys\models\Perfil;
+use App\Natys\Models\Perfil;
 
 $perfil = new Perfil();
 
-$action = $_REQUEST['action'] ?? 'listar';
+$action = $_REQUEST['action'] ?? 'miperfil';
 
 switch ($action) {
+    case 'miperfil':
+        include 'app/views/perfil/perfil.php';
+        break;
+        
+    case 'cambiarClave':
+        header('Content-Type: application/json');
+        
+        if (empty($_POST['clave_actual']) || empty($_POST['nueva_clave']) || empty($_POST['confirmar_clave'])) {
+            echo json_encode(['success' => false, 'message' => 'Todos los campos son requeridos']);
+            exit;
+        }
+        
+        if ($_POST['nueva_clave'] !== $_POST['confirmar_clave']) {
+            echo json_encode(['success' => false, 'message' => 'Las nuevas contraseñas no coinciden']);
+            exit;
+        }
+        
+        $resultado = $perfil->cambiarClave(
+            $_SESSION['usuario']['id'],
+            $_POST['clave_actual'],
+            $_POST['nueva_clave']
+        );
+        
+        if ($resultado) {
+            echo json_encode(['success' => true, 'message' => 'Contraseña actualizada correctamente']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'La contraseña actual es incorrecta']);
+        }
+        break;
+        
     case 'formEditar':
         header('Content-Type: application/json');
         if (isset($_GET['id'])) {
@@ -42,7 +72,6 @@ switch ($action) {
     case 'actualizar':
         header('Content-Type: application/json');
         if (isset($_POST['id'], $_POST['correo_usuario'], $_POST['usuario'], $_POST['rol'])) {
-            $perfil = new Perfil();
             $perfil->id = $_POST['id'];
             $perfil->correo_usuario = $_POST['correo_usuario'];
             $perfil->usuario = $_POST['usuario'];
@@ -74,6 +103,12 @@ switch ($action) {
         break;
 
     case 'listar':
+        // Verificar si el usuario tiene permiso (admin o superadmin)
+        if (!in_array($_SESSION['usuario']['rol'], ['admin', 'superadmin'])) {
+            header('Location: index.php?url=perfil&action=miperfil');
+            exit;
+        }
+        
         if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
             header('Content-Type: application/json');
             $perfiles = $perfil->listar();
@@ -82,5 +117,9 @@ switch ($action) {
             $perfiles = $perfil->listar();
             include 'app/views/perfil/listar.php';
         }
+        break;
+        
+    default:
+        header('Location: index.php?url=perfil&action=miperfil');
         break;
 }
