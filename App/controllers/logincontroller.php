@@ -46,6 +46,7 @@ switch ($action) {
                 'usuario' => $usuario['usuario'],
                 'rol' => $usuario['rol']
             ];
+            $_SESSION['last_activity'] = time(); // Registrar tiempo de inicio de sesión
 
             if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
                 header('Content-Type: application/json');
@@ -67,9 +68,9 @@ switch ($action) {
         break;
 
     case 'mostrarFormulario':
-        case 'mostrarRecuperar':
-        case 'solicitarRecuperacion':
-        case 'cambiarClave':
+    case 'mostrarRecuperar':
+    case 'solicitarRecuperacion':
+    case 'cambiarClave':
         // Estas acciones son públicas y no requieren autenticación
         switch ($action) {
             case 'mostrarFormulario':

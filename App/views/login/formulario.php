@@ -81,6 +81,22 @@
         .auth-logo img {
             height: 60px;
         }
+        
+        /* Estilos para el modal de timeout */
+        #timeoutModal {
+            z-index: 99999;
+        }
+        
+        #timeoutModal .modal-body {
+            text-align: center;
+            font-size: 1.2rem;
+        }
+        
+        #countdown {
+            font-weight: bold;
+            color: var(--primary-color);
+            font-size: 1.5rem;
+        }
     </style>
 </head>
 <body>
@@ -127,6 +143,27 @@
                             </div>
                         </form>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para advertencia de timeout -->
+    <div class="modal fade" id="timeoutModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title">Advertencia de Inactividad</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Tu sesión está a punto de expirar por inactividad.</p>
+                    <p>Serás redirigido al login en <span id="countdown">60</span> segundos.</p>
+                    <p>Mueve el mouse o presiona una tecla para continuar.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" id="stayLoggedIn">Continuar sesión</button>
                 </div>
             </div>
         </div>
@@ -200,6 +237,102 @@
                     submitBtn.prop('disabled', false);
                 }
             });
+        });
+
+        // =============================================
+        // Sistema de Timeout por Inactividad
+        // =============================================
+        const inactiveTimeout = 300000; // 5 minutos en milisegundos
+        const warningTimeout = 240000; // 4 minutos en milisegundos (muestra advertencia 1 minuto antes)
+        
+        let inactivityTimer;
+        let warningTimer;
+        let countdownInterval;
+        const timeoutModal = new bootstrap.Modal(document.getElementById('timeoutModal'));
+        
+        // Función para reiniciar los timers
+        function resetInactivityTimers() {
+            // Limpiar timers existentes
+            clearTimeout(inactivityTimer);
+            clearTimeout(warningTimer);
+            clearInterval(countdownInterval);
+            
+            // Ocultar modal si está visible
+            timeoutModal.hide();
+            
+            // Configurar nuevo timer de advertencia
+            warningTimer = setTimeout(showTimeoutWarning, warningTimeout);
+            
+            // Configurar nuevo timer de logout
+            inactivityTimer = setTimeout(logoutDueToInactivity, inactiveTimeout);
+        }
+        
+        // Mostrar advertencia de timeout
+        function showTimeoutWarning() {
+            // Mostrar modal
+            timeoutModal.show();
+            
+            // Configurar cuenta regresiva
+            let secondsLeft = 60;
+            $('#countdown').text(secondsLeft);
+            
+            countdownInterval = setInterval(function() {
+                secondsLeft--;
+                $('#countdown').text(secondsLeft);
+                
+                if (secondsLeft <= 0) {
+                    clearInterval(countdownInterval);
+                }
+            }, 1000);
+        }
+        
+        // Cerrar sesión por inactividad
+        function logoutDueToInactivity() {
+            clearInterval(countdownInterval);
+            timeoutModal.hide();
+            
+            toastr.error('Tu sesión ha expirado por inactividad', 'Sesión cerrada', {
+                timeOut: 5000,
+                onHidden: function() {
+                    window.location.href = 'index.php?url=login';
+                }
+            });
+        }
+        
+        // Eventos que reinician el contador de inactividad
+        $(document).on('mousemove keydown click scroll', function() {
+            resetInactivityTimers();
+        });
+        
+        // Botón para continuar sesión
+        $('#stayLoggedIn').click(function() {
+            resetInactivityTimers();
+            timeoutModal.hide();
+        });
+        
+        // Iniciar timers al cargar la página
+        resetInactivityTimers();
+        
+        // Manejar respuesta AJAX para warnings de timeout del servidor
+        $(document).ajaxSuccess(function(event, xhr, settings) {
+            try {
+                const response = JSON.parse(xhr.responseText);
+                if (response.timeout_warning) {
+                    toastr.warning(response.message, 'Advertencia', {
+                        timeOut: response.remaining * 1000,
+                        closeButton: true
+                    });
+                } else if (response.timeout) {
+                    toastr.error(response.message, 'Sesión expirada', {
+                        timeOut: 5000,
+                        onHidden: function() {
+                            window.location.href = response.redirect;
+                        }
+                    });
+                }
+            } catch (e) {
+                // No es una respuesta JSON o no es relevante
+            }
         });
     });
     </script>
