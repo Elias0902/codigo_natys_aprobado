@@ -1,7 +1,7 @@
 class SessionManager {
     constructor() {
-        this.timeout = 20 * 1000; // 20 segundos (debe coincidir con PHP)
-        this.warningTime = 15 * 1000; // Mostrar advertencia a los 15s
+        this.timeout = 5  * 60 * 1000; 
+        this.warningTime = 4 * 60 * 1000; 
         this.modal = null;
         this.timers = {
             warning: null,

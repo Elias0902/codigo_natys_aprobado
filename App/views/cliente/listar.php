@@ -1,5 +1,4 @@
 <?php
-// Al inicio del archivo listar.php
 ob_start();
 ?>
 

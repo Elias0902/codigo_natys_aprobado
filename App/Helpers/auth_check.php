@@ -4,7 +4,7 @@ session_start();
 // Verificar timeout de inactividad
 if (isset($_SESSION['usuario'])) {
     $inactive = 300; // 5 minutos en segundos
-    $warning_time = 60; // 1 minuto en segundos
+    $warning_time =60; // 1 minuto en segundos
     
     $session_life = time() - ($_SESSION['last_activity'] ?? 0);
     
@@ -32,13 +32,13 @@ if (isset($_SESSION['usuario'])) {
             echo json_encode([
                 'success' => false, 
                 'message' => 'Sesión expirada por inactividad', 
-                'redirect' => 'index.php?url=login',
+                'redirect' => 'index.php?url=login&Reason=Sesion-Expirada',
                 'timeout' => true
             ]);
             exit;
         } else {
             $_SESSION['error_login'] = 'Tu sesión ha expirado por inactividad';
-            header('Location: index.php?url=login');
+            header('Location: index.php?url=login&Reason=Sesion-Expirada');
             exit;
         }
     }

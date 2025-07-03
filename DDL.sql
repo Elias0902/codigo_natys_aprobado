@@ -10,7 +10,7 @@ USE natys;
 -- Tabla usuario
 CREATE TABLE usuario (
   id INT NOT NULL AUTO_INCREMENT,
-  correo_usuario VARCHAR(70) NOT NULL,
+  correo_usuario VARCHAR(70) NOT NULL, UNIQUE,
   usuario VARCHAR(45) NOT NULL,
   clave VARCHAR(50) NOT NULL,
   rol VARCHAR(30) NOT NULL COMMENT 'Ej: admin, vendedor',
