@@ -134,4 +134,8 @@ CREATE TABLE detalle_movimiento (
 ALTER TABLE movimiento_entrada AUTO_INCREMENT = 1;
 ALTER TABLE pago AUTO_INCREMENT = 2;
 ALTER TABLE pedido AUTO_INCREMENT = 1;
+<<<<<<< HEAD
 ALTER TABLE usuario AUTO_INCREMENT = 4;
+=======
+ALTER TABLE usuario AUTO_INCREMENT = 4;
+>>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f

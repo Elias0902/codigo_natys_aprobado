@@ -1,5 +1,5 @@
 <?php
-
+require_once 'App/Helpers/auth_check.php';
 use App\Natys\Models\Producto;
 
 $producto = new Producto();

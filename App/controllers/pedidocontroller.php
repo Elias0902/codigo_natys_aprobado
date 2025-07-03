@@ -1,14 +1,24 @@
 <?php
+<<<<<<< HEAD
 use App\Natys\models\Pedido;
 use App\Natys\models\Cliente;
 use App\Natys\models\Producto;
 use App\Natys\models\Metodo;
 use App\Natys\models\Pago;
+=======
+require_once 'App/Helpers/auth_check.php';
+use App\Natys\models\Pedido;
+use App\Natys\models\Cliente;
+use App\Natys\models\Producto;
+>>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
 
 $pedido = new Pedido();
 $cliente = new Cliente();
 $producto = new Producto();
+<<<<<<< HEAD
 $metodo = new Metodo();
+=======
+>>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
 
 $action = $_REQUEST['action'] ?? 'listar';
 
@@ -16,9 +26,14 @@ switch ($action) {
     case 'formNuevo':
         $clientes = $cliente->listar();
         $productos = $producto->listar();
+<<<<<<< HEAD
         $metodos = $metodo->listar();
         
         echo generarFormularioPedido($clientes, $productos, $metodos);
+=======
+        
+        echo generarFormularioPedido($clientes, $productos);
+>>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
         break;
 
     case 'formEditar':
@@ -29,7 +44,10 @@ switch ($action) {
             $detalles = $pedido->obtenerDetalles($id_pedido);
             
             if ($datos) {
+<<<<<<< HEAD
                 // Convertir valores numéricos a float/int
+=======
+>>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
                 $detalles = array_map(function($detalle) {
                     return [
                         'cod_producto' => $detalle['cod_producto'],
@@ -66,6 +84,7 @@ switch ($action) {
     case 'guardar':
         header('Content-Type: application/json');
         try {
+<<<<<<< HEAD
             if (!isset($_POST['fecha'], $_POST['cliente'], $_POST['metodo_pago'], $_POST['detalles'])) {
                 throw new Exception('Faltan datos requeridos');
             }
@@ -96,11 +115,25 @@ switch ($action) {
             $id_pago = $pago->conn->lastInsertId();
 
             // Procesar pedido
+=======
+            if (!isset($_POST['fecha'], $_POST['cliente'], $_POST['detalles'], $_POST['total'])) {
+                throw new Exception('Faltan datos requeridos: fecha, cliente, detalles o total');
+            }
+
+            $detallesArray = json_decode($_POST['detalles'], true);
+            if (!is_array($detallesArray) || empty($detallesArray)) {
+                throw new Exception('Debe agregar al menos un producto');
+            }
+
+>>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
             $pedido->fecha = $_POST['fecha'];
             $pedido->total = (float)$_POST['total'];
             $pedido->cant_producto = array_sum(array_column($detallesArray, 'cantidad'));
             $pedido->ced_cliente = $_POST['cliente'];
+<<<<<<< HEAD
             $pedido->id_pago = $id_pago;
+=======
+>>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
 
             if ($pedido->guardar($detallesArray)) {
                 echo json_encode([
@@ -124,16 +157,24 @@ switch ($action) {
     case 'actualizar':
         header('Content-Type: application/json');
         try {
+<<<<<<< HEAD
             if (!isset($_POST['id_pedido'], $_POST['fecha'], $_POST['cliente'], $_POST['metodo_pago'], $_POST['detalles'])) {
                 throw new Exception('Faltan datos requeridos');
             }
 
             // Obtener pedido existente
+=======
+            if (!isset($_POST['id_pedido'], $_POST['fecha'], $_POST['cliente'], $_POST['detalles'], $_POST['total'])) {
+                throw new Exception('Faltan datos requeridos');
+            }
+
+>>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
             $pedidoExistente = $pedido->obtenerPedido($_POST['id_pedido']);
             if (!$pedidoExistente) {
                 throw new Exception('Pedido no encontrado');
             }
 
+<<<<<<< HEAD
             // Validar y procesar detalles
             $detallesArray = json_decode($_POST['detalles'], true);
             if (!is_array($detallesArray)) {
@@ -158,12 +199,22 @@ switch ($action) {
             $pago->actualizar();
 
             // Actualizar pedido
+=======
+            $detallesArray = json_decode($_POST['detalles'], true);
+            if (!is_array($detallesArray) || empty($detallesArray)) {
+                throw new Exception('Debe agregar al menos un producto');
+            }
+
+>>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
             $pedido->id_pedido = $_POST['id_pedido'];
             $pedido->fecha = $_POST['fecha'];
             $pedido->total = (float)$_POST['total'];
             $pedido->cant_producto = array_sum(array_column($detallesArray, 'cantidad'));
             $pedido->ced_cliente = $_POST['cliente'];
+<<<<<<< HEAD
             $pedido->id_pago = $pedidoExistente['id_pago'];
+=======
+>>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
 
             if ($pedido->actualizar($detallesArray)) {
                 echo json_encode([
@@ -235,7 +286,11 @@ switch ($action) {
         break;
 }
 
+<<<<<<< HEAD
 function generarFormularioPedido($clientes, $productos, $metodos) {
+=======
+function generarFormularioPedido($clientes, $productos) {
+>>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
     ob_start();
     ?>
     <div class="modal-body">
@@ -250,6 +305,7 @@ function generarFormularioPedido($clientes, $productos, $metodos) {
                 
                 <div class="col-md-6">
                     <label for="clienteSelect" class="form-label">Cliente</label>
+<<<<<<< HEAD
                     <select class="form-select" id="clienteSelect" name="cliente" required>
                         <option value="">Seleccione un cliente</option>
                         <?php foreach ($clientes as $cliente): ?>
@@ -286,6 +342,17 @@ function generarFormularioPedido($clientes, $productos, $metodos) {
                 <div class="col-md-6">
                     <label for="referencia" class="form-label">Referencia</label>
                     <input type="text" class="form-control" id="referencia" name="referencia">
+=======
+<select class="form-select" id="ClienteSelect" style="width: 60%;">
+    <option value="">Seleccione un Cliente</option>
+    <?php foreach ($clientes as $cliente): ?>
+        <option value="<?= htmlspecialchars($cliente['ced_cliente']) ?>" 
+                data-nombre="<?= htmlspecialchars($cliente['nomcliente']) ?>">
+            <?= htmlspecialchars($cliente['nomcliente']) ?>
+        </option>
+    <?php endforeach; ?>
+</select>
+>>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
                 </div>
             </div>
             
@@ -351,6 +418,7 @@ function generarFormularioPedido($clientes, $productos, $metodos) {
     $(document).ready(function() {
         const detalles = [];
         
+<<<<<<< HEAD
         // Mostrar/ocultar campos según método de pago
         $('#metodoPagoSelect').change(function() {
             const metodo = $(this).val();
@@ -364,6 +432,8 @@ function generarFormularioPedido($clientes, $productos, $metodos) {
         }).trigger('change');
         
         // Manejar agregar productos
+=======
+>>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
         $('#btnAgregarProducto').click(function() {
             const productoSelect = $('#productoSelect');
             const productoOption = productoSelect.find('option:selected');
@@ -373,7 +443,10 @@ function generarFormularioPedido($clientes, $productos, $metodos) {
                 return;
             }
 
+<<<<<<< HEAD
             // Conversión segura a números
+=======
+>>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
             const precio = parseFloat(productoOption.data('precio')) || 0;
             const cantidad = parseInt($('#cantidadProducto').val()) || 0;
             
@@ -384,7 +457,10 @@ function generarFormularioPedido($clientes, $productos, $metodos) {
 
             const subtotal = precio * cantidad;
             
+<<<<<<< HEAD
             // Agregar a la lista de detalles
+=======
+>>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
             detalles.push({
                 cod_producto: productoOption.val(),
                 producto: productoOption.data('nombre'),
@@ -393,10 +469,15 @@ function generarFormularioPedido($clientes, $productos, $metodos) {
                 subtotal: subtotal
             });
             
+<<<<<<< HEAD
             // Actualizar tabla
             actualizarTablaProductos();
             
             // Limpiar selección
+=======
+            actualizarTablaProductos();
+            
+>>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
             productoSelect.val('').trigger('change');
             $('#cantidadProducto').val(1);
         });
@@ -408,7 +489,10 @@ function generarFormularioPedido($clientes, $productos, $metodos) {
             let total = 0;
             
             detalles.forEach((detalle, index) => {
+<<<<<<< HEAD
                 // Asegurar que los valores sean números
+=======
+>>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
                 const precio = parseFloat(detalle.precio) || 0;
                 const cantidad = parseInt(detalle.cantidad) || 0;
                 const subtotal = parseFloat(detalle.subtotal) || 0;
@@ -417,7 +501,11 @@ function generarFormularioPedido($clientes, $productos, $metodos) {
                 
                 tbody.append(`
                     <tr>
+<<<<<<< HEAD
                         <td>${detalle.cod_producto} - ${detalle.producto}</td>
+=======
+                        <td>${detalle.producto}</td>
+>>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
                         <td>$${precio.toFixed(2)}</td>
                         <td>${cantidad}</td>
                         <td>$${subtotal.toFixed(2)}</td>
@@ -434,7 +522,10 @@ function generarFormularioPedido($clientes, $productos, $metodos) {
             $('#detalles').val(JSON.stringify(detalles));
         }
         
+<<<<<<< HEAD
         // Eliminar producto de la lista
+=======
+>>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
         $(document).on('click', '.btnEliminarProducto', function() {
             const index = $(this).data('index');
             detalles.splice(index, 1);

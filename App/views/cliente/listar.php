@@ -1,3 +1,7 @@
+<?php
+ob_start();
+?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -81,7 +85,7 @@
         </div>
         
         <br>
-        <a href="index.php" class="btn btn-secondary">
+        <a href="index.php?url=home" class="btn btn-secondary">
             <i class="fas fa-home me-2"></i>Menú Principal
         </a>
     </div>
@@ -302,3 +306,9 @@
     <script src="../Natys/Assets/js/cliente.js"></script>
 </body>
 </html>
+
+<?php
+// Al final del archivo listar.php
+$content = ob_get_clean();
+
+include 'Assets/layouts/base.php';

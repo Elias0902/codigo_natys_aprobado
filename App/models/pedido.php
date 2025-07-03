@@ -10,7 +10,10 @@ class Pedido extends Conexion {
     public $total;
     public $cant_producto;
     public $ced_cliente;
+<<<<<<< HEAD
     public $id_pago;
+=======
+>>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
     public $estado;
 
     public function __construct() {
@@ -22,20 +25,31 @@ class Pedido extends Conexion {
         try {
             $this->conn->beginTransaction();
             
+<<<<<<< HEAD
             // Insertar pedido
             $query = "INSERT INTO pedido (fecha, total, cant_producto, ced_cliente, id_pago) 
                       VALUES (:fecha, :total, :cant_producto, :ced_cliente, :id_pago)";
+=======
+            $query = "INSERT INTO pedido (fecha, total, cant_producto, ced_cliente) 
+                      VALUES (:fecha, :total, :cant_producto, :ced_cliente)";
+>>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(":fecha", $this->fecha);
             $stmt->bindParam(":total", $this->total);
             $stmt->bindParam(":cant_producto", $this->cant_producto);
             $stmt->bindParam(":ced_cliente", $this->ced_cliente);
+<<<<<<< HEAD
             $stmt->bindParam(":id_pago", $this->id_pago);
+=======
+>>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
             $stmt->execute();
             
             $this->id_pedido = $this->conn->lastInsertId();
             
+<<<<<<< HEAD
             // Insertar detalles
+=======
+>>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
             foreach ($detalles as $detalle) {
                 $query = "INSERT INTO detalle_pedido (id_pedido, cod_producto, precio, cantidad, subtotal) 
                           VALUES (:id_pedido, :cod_producto, :precio, :cantidad, :subtotal)";
@@ -58,11 +72,17 @@ class Pedido extends Conexion {
     }
 
     public function listar() {
+<<<<<<< HEAD
         $query = "SELECT p.*, c.nomcliente, m.detalle as metodo_pago 
                   FROM pedido p
                   JOIN cliente c ON p.ced_cliente = c.ced_cliente
                   JOIN pago pg ON p.id_pago = pg.id_pago
                   JOIN metodo m ON pg.cod_metodo = m.codigo
+=======
+        $query = "SELECT p.*, c.nomcliente
+                  FROM pedido p
+                  JOIN cliente c ON p.ced_cliente = c.ced_cliente
+>>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
                   WHERE p.estado = 1";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
@@ -70,10 +90,16 @@ class Pedido extends Conexion {
     }
 
     public function obtenerPedido($id) {
+<<<<<<< HEAD
         $query = "SELECT p.*, c.nomcliente, pg.banco, pg.referencia, pg.monto, pg.cod_metodo 
                   FROM pedido p
                   JOIN cliente c ON p.ced_cliente = c.ced_cliente
                   JOIN pago pg ON p.id_pago = pg.id_pago
+=======
+        $query = "SELECT p.*, c.nomcliente
+                  FROM pedido p
+                  JOIN cliente c ON p.ced_cliente = c.ced_cliente
+>>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
                   WHERE p.id_pedido = :id_pedido LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":id_pedido", $id);
@@ -96,30 +122,46 @@ class Pedido extends Conexion {
         try {
             $this->conn->beginTransaction();
             
+<<<<<<< HEAD
             // Actualizar pedido
+=======
+>>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
             $query = "UPDATE pedido SET 
                       fecha = :fecha, 
                       total = :total, 
                       cant_producto = :cant_producto, 
+<<<<<<< HEAD
                       ced_cliente = :ced_cliente, 
                       id_pago = :id_pago
+=======
+                      ced_cliente = :ced_cliente
+>>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
                       WHERE id_pedido = :id_pedido";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(":fecha", $this->fecha);
             $stmt->bindParam(":total", $this->total);
             $stmt->bindParam(":cant_producto", $this->cant_producto);
             $stmt->bindParam(":ced_cliente", $this->ced_cliente);
+<<<<<<< HEAD
             $stmt->bindParam(":id_pago", $this->id_pago);
             $stmt->bindParam(":id_pedido", $this->id_pedido);
             $stmt->execute();
             
             // Eliminar detalles antiguos
+=======
+            $stmt->bindParam(":id_pedido", $this->id_pedido);
+            $stmt->execute();
+            
+>>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
             $query = "DELETE FROM detalle_pedido WHERE id_pedido = :id_pedido";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(":id_pedido", $this->id_pedido);
             $stmt->execute();
             
+<<<<<<< HEAD
             // Insertar nuevos detalles
+=======
+>>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
             foreach ($detalles as $detalle) {
                 $query = "INSERT INTO detalle_pedido (id_pedido, cod_producto, precio, cantidad, subtotal) 
                           VALUES (:id_pedido, :cod_producto, :precio, :cantidad, :subtotal)";
@@ -156,11 +198,17 @@ class Pedido extends Conexion {
     }
 
     public function listarEliminados() {
+<<<<<<< HEAD
         $query = "SELECT p.*, c.nomcliente, m.detalle as metodo_pago 
                   FROM pedido p
                   JOIN cliente c ON p.ced_cliente = c.ced_cliente
                   JOIN pago pg ON p.id_pago = pg.id_pago
                   JOIN metodo m ON pg.cod_metodo = m.codigo
+=======
+        $query = "SELECT p.*, c.nomcliente
+                  FROM pedido p
+                  JOIN cliente c ON p.ced_cliente = c.ced_cliente
+>>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
                   WHERE p.estado = 0";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();

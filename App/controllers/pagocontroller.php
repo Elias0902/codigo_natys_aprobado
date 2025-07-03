@@ -1,5 +1,5 @@
 <?php
-
+require_once 'App/Helpers/auth_check.php';
 use App\Natys\models\Pago;
 
 $pago = new Pago();
