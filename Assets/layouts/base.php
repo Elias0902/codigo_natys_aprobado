@@ -5,11 +5,14 @@
     <meta charset="UTF-8">
     <title><?= $title ?? 'SISTEMA DE GALLETAS NATYS' ?></title>
     <link rel="icon" href="../Natys/Assets/img/natys.png" type="image/x-icon">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <!-- Bootstrap CSS local -->
+    <link href="/Natys/Assets/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome local -->
+    <link href="/Natys/Assets/fontawesome/css/all.min.css" rel="stylesheet">
+    <!-- DataTables CSS local -->
+    <link href="/Natys/Assets/DataTables/datatables.min.css" rel="stylesheet">
+    <!-- Toastr CSS local -->
+    <link href="/Natys/Assets/toastr/toastr.min.css" rel="stylesheet">
     
     <!-- Estilos adicionales específicos de la vista -->
     <?php if (isset($css)): ?>
@@ -25,12 +28,17 @@
         </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/5.5.2/bootbox.min.js"></script>
+    <!-- jQuery local -->
+    <script src="/Natys/Assets/jquery/jquery.min.js"></script>
+    <!-- Bootstrap JS local -->
+    <script src="/Natys/Assets/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <!-- DataTables JS local -->
+    <script src="/Natys/Assets/DataTables/datatables.min.js"></script>
+    <!-- Toastr JS local -->
+    <script src="/Natys/Assets/toastr/toastr.min.js"></script>
+    <!-- Bootbox JS local -->
+    <script src="/Natys/Assets/bootbox/bootbox.min.js"></script>
+    
     <!-- Scripts adicionales específicos de la vista -->
     <?php if (isset($js)): ?>
         <script src="<?= $js ?>"></script>

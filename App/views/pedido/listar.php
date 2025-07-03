@@ -1,10 +1,7 @@
-<<<<<<< HEAD
-=======
 <?php
 // Al inicio del archivo listar.php
 ob_start();
 ?>
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -17,10 +14,6 @@ ob_start();
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<<<<<<< HEAD
-    <!-- Agregar jQuery UI para el datepicker -->
-=======
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
 </head>
 <body>
@@ -45,10 +38,6 @@ ob_start();
                         <th>Cliente</th>
                         <th>Total</th>
                         <th>Cant. Productos</th>
-<<<<<<< HEAD
-                        <th>Método Pago</th>
-=======
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
                         <th>Estado</th>
                         <th>Acciones</th>
                     </tr>
@@ -60,11 +49,7 @@ ob_start();
         </div>
         
         <br>
-<<<<<<< HEAD
-        <a href="index.php" class="btn btn-secondary">
-=======
         <a href="index.php?url=home" class="btn btn-secondary">
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
             <i class="fas fa-home me-2"></i>Menú Principal
         </a>
     </div>
@@ -132,9 +117,6 @@ ob_start();
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="Assets/js/pedido.js"></script>
 </body>
-<<<<<<< HEAD
-</html>
-=======
 </html>
 
 <?php
@@ -142,4 +124,3 @@ ob_start();
 $content = ob_get_clean();
 
 include 'Assets/layouts/base.php';
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f

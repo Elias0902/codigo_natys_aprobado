@@ -1,24 +1,12 @@
 <?php
-<<<<<<< HEAD
-use App\Natys\models\Pedido;
-use App\Natys\models\Cliente;
-use App\Natys\models\Producto;
-use App\Natys\models\Metodo;
-use App\Natys\models\Pago;
-=======
 require_once 'App/Helpers/auth_check.php';
 use App\Natys\models\Pedido;
 use App\Natys\models\Cliente;
 use App\Natys\models\Producto;
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
 
 $pedido = new Pedido();
 $cliente = new Cliente();
 $producto = new Producto();
-<<<<<<< HEAD
-$metodo = new Metodo();
-=======
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
 
 $action = $_REQUEST['action'] ?? 'listar';
 
@@ -26,14 +14,8 @@ switch ($action) {
     case 'formNuevo':
         $clientes = $cliente->listar();
         $productos = $producto->listar();
-<<<<<<< HEAD
-        $metodos = $metodo->listar();
-        
-        echo generarFormularioPedido($clientes, $productos, $metodos);
-=======
         
         echo generarFormularioPedido($clientes, $productos);
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
         break;
 
     case 'formEditar':
@@ -44,10 +26,6 @@ switch ($action) {
             $detalles = $pedido->obtenerDetalles($id_pedido);
             
             if ($datos) {
-<<<<<<< HEAD
-                // Convertir valores numéricos a float/int
-=======
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
                 $detalles = array_map(function($detalle) {
                     return [
                         'cod_producto' => $detalle['cod_producto'],
@@ -84,38 +62,6 @@ switch ($action) {
     case 'guardar':
         header('Content-Type: application/json');
         try {
-<<<<<<< HEAD
-            if (!isset($_POST['fecha'], $_POST['cliente'], $_POST['metodo_pago'], $_POST['detalles'])) {
-                throw new Exception('Faltan datos requeridos');
-            }
-
-            // Validar y procesar detalles
-            $detallesArray = json_decode($_POST['detalles'], true);
-            if (!is_array($detallesArray)) {
-                throw new Exception('Formato de detalles inválido');
-            }
-
-            // Validar valores numéricos
-            foreach ($detallesArray as $detalle) {
-                if (!is_numeric($detalle['precio']) || !is_numeric($detalle['cantidad']) || !is_numeric($detalle['subtotal'])) {
-                    throw new Exception('Valores numéricos inválidos en los detalles');
-                }
-            }
-
-            // Procesar pago
-            $pago = new Pago();
-            $pago->banco = $_POST['banco'] ?? '';
-            $pago->referencia = $_POST['referencia'] ?? '';
-            $pago->fecha = $_POST['fecha'];
-            $pago->monto = (float)$_POST['total'];
-            $pago->cod_metodo = $_POST['metodo_pago'];
-            
-            // Guardar pago
-            $pago->guardar();
-            $id_pago = $pago->conn->lastInsertId();
-
-            // Procesar pedido
-=======
             if (!isset($_POST['fecha'], $_POST['cliente'], $_POST['detalles'], $_POST['total'])) {
                 throw new Exception('Faltan datos requeridos: fecha, cliente, detalles o total');
             }
@@ -125,15 +71,10 @@ switch ($action) {
                 throw new Exception('Debe agregar al menos un producto');
             }
 
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
             $pedido->fecha = $_POST['fecha'];
             $pedido->total = (float)$_POST['total'];
             $pedido->cant_producto = array_sum(array_column($detallesArray, 'cantidad'));
             $pedido->ced_cliente = $_POST['cliente'];
-<<<<<<< HEAD
-            $pedido->id_pago = $id_pago;
-=======
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
 
             if ($pedido->guardar($detallesArray)) {
                 echo json_encode([
@@ -157,64 +98,25 @@ switch ($action) {
     case 'actualizar':
         header('Content-Type: application/json');
         try {
-<<<<<<< HEAD
-            if (!isset($_POST['id_pedido'], $_POST['fecha'], $_POST['cliente'], $_POST['metodo_pago'], $_POST['detalles'])) {
-                throw new Exception('Faltan datos requeridos');
-            }
-
-            // Obtener pedido existente
-=======
             if (!isset($_POST['id_pedido'], $_POST['fecha'], $_POST['cliente'], $_POST['detalles'], $_POST['total'])) {
                 throw new Exception('Faltan datos requeridos');
             }
 
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
             $pedidoExistente = $pedido->obtenerPedido($_POST['id_pedido']);
             if (!$pedidoExistente) {
                 throw new Exception('Pedido no encontrado');
             }
 
-<<<<<<< HEAD
-            // Validar y procesar detalles
-            $detallesArray = json_decode($_POST['detalles'], true);
-            if (!is_array($detallesArray)) {
-                throw new Exception('Formato de detalles inválido');
-            }
-
-            // Validar valores numéricos
-            foreach ($detallesArray as $detalle) {
-                if (!is_numeric($detalle['precio']) || !is_numeric($detalle['cantidad']) || !is_numeric($detalle['subtotal'])) {
-                    throw new Exception('Valores numéricos inválidos en los detalles');
-                }
-            }
-
-            // Actualizar pago
-            $pago = new Pago();
-            $pago->id_pago = $pedidoExistente['id_pago'];
-            $pago->banco = $_POST['banco'] ?? '';
-            $pago->referencia = $_POST['referencia'] ?? '';
-            $pago->fecha = $_POST['fecha'];
-            $pago->monto = (float)$_POST['total'];
-            $pago->cod_metodo = $_POST['metodo_pago'];
-            $pago->actualizar();
-
-            // Actualizar pedido
-=======
             $detallesArray = json_decode($_POST['detalles'], true);
             if (!is_array($detallesArray) || empty($detallesArray)) {
                 throw new Exception('Debe agregar al menos un producto');
             }
 
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
             $pedido->id_pedido = $_POST['id_pedido'];
             $pedido->fecha = $_POST['fecha'];
             $pedido->total = (float)$_POST['total'];
             $pedido->cant_producto = array_sum(array_column($detallesArray, 'cantidad'));
             $pedido->ced_cliente = $_POST['cliente'];
-<<<<<<< HEAD
-            $pedido->id_pago = $pedidoExistente['id_pago'];
-=======
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
 
             if ($pedido->actualizar($detallesArray)) {
                 echo json_encode([
@@ -286,11 +188,7 @@ switch ($action) {
         break;
 }
 
-<<<<<<< HEAD
-function generarFormularioPedido($clientes, $productos, $metodos) {
-=======
 function generarFormularioPedido($clientes, $productos) {
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
     ob_start();
     ?>
     <div class="modal-body">
@@ -305,44 +203,6 @@ function generarFormularioPedido($clientes, $productos) {
                 
                 <div class="col-md-6">
                     <label for="clienteSelect" class="form-label">Cliente</label>
-<<<<<<< HEAD
-                    <select class="form-select" id="clienteSelect" name="cliente" required>
-                        <option value="">Seleccione un cliente</option>
-                        <?php foreach ($clientes as $cliente): ?>
-                            <option value="<?= $cliente['ced_cliente'] ?>" 
-                                    data-nombre="<?= htmlspecialchars($cliente['nomcliente']) ?>"
-                                    data-telefono="<?= htmlspecialchars($cliente['telefono']) ?>"
-                                    data-correo="<?= htmlspecialchars($cliente['correo']) ?>"
-                                    data-direccion="<?= htmlspecialchars($cliente['direccion']) ?>">
-                                <?= htmlspecialchars($cliente['ced_cliente']) ?> - <?= htmlspecialchars($cliente['nomcliente']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-            </div>
-            
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label for="metodoPagoSelect" class="form-label">Método de Pago</label>
-                    <select class="form-select" id="metodoPagoSelect" name="metodo_pago" required>
-                        <option value="">Seleccione un método</option>
-                        <?php foreach ($metodos as $metodo): ?>
-                            <option value="<?= htmlspecialchars($metodo['codigo']) ?>"><?= htmlspecialchars($metodo['detalle']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                
-                <div class="col-md-6" id="bancoContainer" style="display: none;">
-                    <label for="banco" class="form-label">Banco</label>
-                    <input type="text" class="form-control" id="banco" name="banco">
-                </div>
-            </div>
-            
-            <div class="row mb-3" id="referenciaContainer" style="display: none;">
-                <div class="col-md-6">
-                    <label for="referencia" class="form-label">Referencia</label>
-                    <input type="text" class="form-control" id="referencia" name="referencia">
-=======
 <select class="form-select" id="ClienteSelect" style="width: 60%;">
     <option value="">Seleccione un Cliente</option>
     <?php foreach ($clientes as $cliente): ?>
@@ -352,7 +212,6 @@ function generarFormularioPedido($clientes, $productos) {
         </option>
     <?php endforeach; ?>
 </select>
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
                 </div>
             </div>
             
@@ -418,22 +277,6 @@ function generarFormularioPedido($clientes, $productos) {
     $(document).ready(function() {
         const detalles = [];
         
-<<<<<<< HEAD
-        // Mostrar/ocultar campos según método de pago
-        $('#metodoPagoSelect').change(function() {
-            const metodo = $(this).val();
-            const esTransferencia = metodo === 'TRANSF';
-            
-            $('#bancoContainer, #referenciaContainer').toggle(esTransferencia);
-            
-            if (!esTransferencia) {
-                $('#banco, #referencia').val('');
-            }
-        }).trigger('change');
-        
-        // Manejar agregar productos
-=======
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
         $('#btnAgregarProducto').click(function() {
             const productoSelect = $('#productoSelect');
             const productoOption = productoSelect.find('option:selected');
@@ -443,10 +286,6 @@ function generarFormularioPedido($clientes, $productos) {
                 return;
             }
 
-<<<<<<< HEAD
-            // Conversión segura a números
-=======
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
             const precio = parseFloat(productoOption.data('precio')) || 0;
             const cantidad = parseInt($('#cantidadProducto').val()) || 0;
             
@@ -457,10 +296,6 @@ function generarFormularioPedido($clientes, $productos) {
 
             const subtotal = precio * cantidad;
             
-<<<<<<< HEAD
-            // Agregar a la lista de detalles
-=======
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
             detalles.push({
                 cod_producto: productoOption.val(),
                 producto: productoOption.data('nombre'),
@@ -469,15 +304,8 @@ function generarFormularioPedido($clientes, $productos) {
                 subtotal: subtotal
             });
             
-<<<<<<< HEAD
-            // Actualizar tabla
             actualizarTablaProductos();
             
-            // Limpiar selección
-=======
-            actualizarTablaProductos();
-            
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
             productoSelect.val('').trigger('change');
             $('#cantidadProducto').val(1);
         });
@@ -489,10 +317,6 @@ function generarFormularioPedido($clientes, $productos) {
             let total = 0;
             
             detalles.forEach((detalle, index) => {
-<<<<<<< HEAD
-                // Asegurar que los valores sean números
-=======
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
                 const precio = parseFloat(detalle.precio) || 0;
                 const cantidad = parseInt(detalle.cantidad) || 0;
                 const subtotal = parseFloat(detalle.subtotal) || 0;
@@ -501,11 +325,7 @@ function generarFormularioPedido($clientes, $productos) {
                 
                 tbody.append(`
                     <tr>
-<<<<<<< HEAD
-                        <td>${detalle.cod_producto} - ${detalle.producto}</td>
-=======
                         <td>${detalle.producto}</td>
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
                         <td>$${precio.toFixed(2)}</td>
                         <td>${cantidad}</td>
                         <td>$${subtotal.toFixed(2)}</td>
@@ -522,10 +342,6 @@ function generarFormularioPedido($clientes, $productos) {
             $('#detalles').val(JSON.stringify(detalles));
         }
         
-<<<<<<< HEAD
-        // Eliminar producto de la lista
-=======
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
         $(document).on('click', '.btnEliminarProducto', function() {
             const index = $(this).data('index');
             detalles.splice(index, 1);

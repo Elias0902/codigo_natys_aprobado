@@ -51,10 +51,6 @@ $(document).ready(function() {
                     }
                 },
                 { data: 'cant_producto' },
-<<<<<<< HEAD
-                { data: 'metodo_pago' },
-=======
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
                 { 
                     data: 'estado',
                     render: function(data) {
@@ -130,10 +126,6 @@ $(document).ready(function() {
         let total = 0;
         
         detalles.forEach((detalle, index) => {
-<<<<<<< HEAD
-            // Conversión segura a números
-=======
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
             const precio = parseFloat(detalle.precio) || 0;
             const cantidad = parseInt(detalle.cantidad) || 0;
             const subtotal = parseFloat(detalle.subtotal) || 0;
@@ -142,11 +134,7 @@ $(document).ready(function() {
             
             tbody.append(`
                 <tr>
-<<<<<<< HEAD
-                    <td>${detalle.cod_producto} - ${detalle.producto || $('#productoSelect option[value="' + detalle.cod_producto + '"]').data('nombre') || 'Producto'}</td>
-=======
                     <td>${detalle.producto}</td>
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
                     <td>$${precio.toFixed(2)}</td>
                     <td>${cantidad}</td>
                     <td>$${subtotal.toFixed(2)}</td>
@@ -173,20 +161,12 @@ $(document).ready(function() {
                 return;
             }
 
-<<<<<<< HEAD
-            // Conversión segura de cantidad
-=======
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
             const cantidad = parseInt($('#cantidadProducto').val());
             if (isNaN(cantidad) || cantidad < 1) {
                 toastr.error('Ingrese una cantidad válida (mínimo 1)');
                 return;
             }
 
-<<<<<<< HEAD
-            // Conversión segura de precio
-=======
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
             const precio = parseFloat(productoOption.data('precio'));
             if (isNaN(precio)) {
                 toastr.error('El producto no tiene un precio válido');
@@ -195,10 +175,6 @@ $(document).ready(function() {
 
             const subtotal = precio * cantidad;
 
-<<<<<<< HEAD
-            // Agregar a la lista de detalles
-=======
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
             detalles.push({
                 cod_producto: productoOption.val(),
                 producto: productoOption.data('nombre'),
@@ -207,15 +183,8 @@ $(document).ready(function() {
                 subtotal: subtotal
             });
             
-<<<<<<< HEAD
-            // Actualizar tabla
             actualizarTablaProductos();
             
-            // Limpiar selección
-=======
-            actualizarTablaProductos();
-            
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
             productoSelect.val('').trigger('change');
             $('#cantidadProducto').val(1);
         });
@@ -230,10 +199,6 @@ $(document).ready(function() {
     }
 
     function inicializarComponentes() {
-<<<<<<< HEAD
-        // Inicializar select2
-=======
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
         if ($('#clienteSelect').length) {
             $('#clienteSelect').select2({
                 placeholder: 'Seleccione un cliente',
@@ -241,43 +206,13 @@ $(document).ready(function() {
             });
         }
         
-<<<<<<< HEAD
-        if ($('#metodoPagoSelect').length) {
-            $('#metodoPagoSelect').select2({
-                placeholder: 'Seleccione un método de pago',
-                width: '100%'
-            });
-        }
-        
-        // Configurar fecha actual por defecto
         if ($('#fechaPedido').length) {
             $('#fechaPedido').val(new Date().toISOString().substr(0, 10));
         }
-
-        // Mostrar/ocultar campos según método de pago
-        $('#metodoPagoSelect').change(function() {
-            const metodo = $(this).val();
-            const esTransferencia = metodo === 'TRANSF';
-            
-            $('#bancoContainer, #referenciaContainer').toggle(esTransferencia);
-            
-            if (!esTransferencia) {
-                $('#banco, #referencia').val('');
-            }
-        }).trigger('change');
-=======
-        if ($('#fechaPedido').length) {
-            $('#fechaPedido').val(new Date().toISOString().substr(0, 10));
-        }
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
     }
 
     const cargarFormulario = (modalId, contenidoId, datos = null) => {
         if (datos) {
-<<<<<<< HEAD
-            // Para edición, cargar datos del pedido
-=======
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
             $.ajax({
                 url: `index.php?url=pedido&action=formEditar&id_pedido=${datos.id_pedido}`,
                 type: 'GET',
@@ -291,24 +226,11 @@ $(document).ready(function() {
                                 $(contenidoId).html(formHtml);
                                 $(modalId).modal('show');
                                 
-<<<<<<< HEAD
-                                // Llenar datos del formulario
-                                const pedido = response.data.pedido;
-                                $('#id_pedido').val(pedido.id_pedido);
-                                $('#fechaPedido').val(pedido.fecha);
-                                $('#clienteSelect').val(pedido.ced_cliente).trigger('change');
-                                $('#metodoPagoSelect').val(pedido.cod_metodo).trigger('change');
-                                $('#banco').val(pedido.banco || '');
-                                $('#referencia').val(pedido.referencia || '');
-                                
-                                // Llenar detalles de productos con conversión segura
-=======
                                 const pedido = response.data.pedido;
                                 $('#id_pedido').val(pedido.id_pedido);
                                 $('#fechaPedido').val(pedido.fecha.split(' ')[0]);
                                 $('#clienteSelect').val(pedido.ced_cliente).trigger('change');
                                 
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
                                 detalles = (response.data.detalles || []).map(detalle => ({
                                     cod_producto: detalle.cod_producto || '',
                                     producto: detalle.producto || 'Producto desconocido',
@@ -317,10 +239,6 @@ $(document).ready(function() {
                                     subtotal: parseFloat(detalle.subtotal) || 0
                                 }));
                                 
-<<<<<<< HEAD
-                                // Actualizar tabla de productos
-=======
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
                                 actualizarTablaProductos();
                                 inicializarComponentes();
                             },
@@ -339,10 +257,6 @@ $(document).ready(function() {
                 }
             });
         } else {
-<<<<<<< HEAD
-            // Para nuevo pedido
-=======
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
             detalles = [];
             $.ajax({
                 url: 'index.php?url=pedido&action=formNuevo',
@@ -387,8 +301,6 @@ $(document).ready(function() {
             
             const form = this;
             const formData = $(form).serialize();
-<<<<<<< HEAD
-=======
             
             // Validar que haya al menos un producto
             if(detalles.length === 0) {
@@ -402,7 +314,6 @@ $(document).ready(function() {
                 return;
             }
 
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
             const isNew = !form.querySelector('#id_pedido').value;
             const actionUrl = isNew 
                 ? 'index.php?url=pedido&action=guardar' 
@@ -412,14 +323,10 @@ $(document).ready(function() {
                 url: actionUrl,
                 type: 'POST',
                 data: formData,
-<<<<<<< HEAD
-                dataType: 'json'
-=======
                 dataType: 'json',
                 beforeSend: function() {
                     $('#formPedido [type="submit"]').prop('disabled', true);
                 }
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
             })
             .done(response => {
                 if(response.success) {
@@ -429,10 +336,7 @@ $(document).ready(function() {
                     
                     if(isNew) {
                         form.reset();
-<<<<<<< HEAD
-=======
                         detalles = [];
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
                     }
                 } else {
                     toastr.error(response.message);
@@ -440,22 +344,14 @@ $(document).ready(function() {
             })
             .fail((xhr, status, error) => {
                 console.error('Error en la petición:', error, xhr.responseText);
-<<<<<<< HEAD
-                toastr.error(`Error en la solicitud: ${error}`);
-=======
                 toastr.error(`Error en la solicitud: ${xhr.responseJSON?.message || error}`);
             })
             .always(() => {
                 $('#formPedido [type="submit"]').prop('disabled', false);
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
             });
         });
     };
 
-<<<<<<< HEAD
-    // Manejar clic en botón de detalles
-=======
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
     $(document).on('click', '.detalle', function(e) {
         e.preventDefault();
         const idPedido = $(this).data('id');
@@ -475,10 +371,6 @@ $(document).ready(function() {
         });
     });
 
-<<<<<<< HEAD
-    // Inicialización
-=======
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
     inicializarDataTable();
     manejarFormulario();
     manejarAgregarProducto();
@@ -538,10 +430,7 @@ $(document).ready(function() {
             }
         });
     });
-<<<<<<< HEAD
-=======
     
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
 
     $(document).on('click', '.restaurar', function(e) {
         e.preventDefault();
@@ -570,10 +459,6 @@ $(document).ready(function() {
         });
     });
 
-<<<<<<< HEAD
-    // Manejar errores de DataTables
-=======
->>>>>>> 76976821448ffa84dd34d6f8e93d11b37a9bd82f
     $.fn.dataTable.ext.errMode = 'none';
     $('#pedidos').on('error.dt', function(e, settings, techNote, message) {
         console.error('Error en DataTables:', message);
