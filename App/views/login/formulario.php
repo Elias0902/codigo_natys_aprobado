@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar Sesión</title>
-    <link rel="icon" href="/Natys/Assets/img/natys.png" type="image/x-icon">
-    <!-- Bootstrap 5 CSS local -->
-    <link href="/Natys/Assets/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome local -->
-    <link href="/Natys/Assets/fontawesome/css/all.min.css" rel="stylesheet">
-    <!-- Toastr CSS local -->
-    <link href="/Natys/Assets/toastr/toastr.min.css" rel="stylesheet">
+    <link rel="icon" href="../Natys/Assets/img/natys.png" type="image/x-icon">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Toastr CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <style>
         :root {
             --primary-color:rgb(204, 29, 29);
@@ -104,7 +104,7 @@
         <div class="row justify-content-center">
             <div class="col-md-8 col-lg-6">
                 <div class="auth-logo">
-                    <img src="/Natys/Assets/img/Natys.png" alt="Logo" class="img-fluid">
+                    <img src="../Natys/Assets/img/Natys.png" alt="Logo" class="img-fluid">
                 </div>
                 
                 <div class="auth-card card">
@@ -169,12 +169,12 @@
         </div>
     </div>
 
-    <!-- jQuery local -->
-    <script src="/Natys/Assets/jquery/jquery.min.js"></script>
-    <!-- Bootstrap JS local -->
-    <script src="/Natys/Assets/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <!-- Toastr JS local -->
-    <script src="/Natys/Assets/toastr/toastr.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Toastr JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     
     <script>
     $(document).ready(function() {
