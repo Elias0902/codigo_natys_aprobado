@@ -1,9 +1,4 @@
 <?php
-// Al inicio del archivo listar.php
-ob_start();
-?>
-<?php
-// Al inicio del archivo listar.php
 ob_start();
 ?>
 <!DOCTYPE html>
@@ -28,10 +23,9 @@ ob_start();
                 <i class="fas fa-plus-circle me-2"></i>Nuevo Pago
             </button>
             <button type="button" class="btn btn-warning" id="btnToggleEstado">
-                <i class="fas fa-trash-restore me-2"></i>Mostrar No Aprobados
+                <i class="fas fa-trash-restore me-2"></i>Mostrar Inactivos
             </button>
         </div>
-
 
         <div class="table-responsive" style="text-align:center;">
             <table id="pagos" class="table table-striped" style="width:100%">
@@ -60,7 +54,7 @@ ob_start();
     </div>
 
     <!-- Modal para seleccionar pedido -->
-    <div class="modal fade" id="modalSeleccionarPedido" tabindex="-1" aria-labelledby="modalSeleccionarPedidoLabel" aria-hidden="true">
+    <div class="modal fade" id="modalSeleccionarPedido" tabindex="-1" aria-labelledby="modalSeleccionarPedidoLabel" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
@@ -100,10 +94,6 @@ ob_start();
                                                         data-fecha="<?= date('d/m/Y', strtotime($pedido['fecha'])) ?>">
                                                     <i class="fas fa-check me-1"></i> Seleccionar
                                                 </button>
-                                                <button class="btn btn-sm btn-info btn-ver-detalle" 
-                                                        data-id-pedido="<?= $pedido['id_pedido'] ?>">
-                                                    <i class="fas fa-eye me-1"></i> Ver Detalle
-                                                </button>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -126,7 +116,7 @@ ob_start();
     </div>
 
     <!-- Modal para nuevo pago -->
-    <div class="modal fade" id="modalNuevoPago" tabindex="-1" aria-labelledby="modalNuevoPagoLabel" aria-hidden="true">
+    <div class="modal fade" id="modalNuevoPago" tabindex="-1" aria-labelledby="modalNuevoPagoLabel" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-success text-white">
@@ -200,11 +190,7 @@ ob_start();
                         <div class="mb-3">
                             <label for="cod_metodo" class="form-label">Método de Pago <span class="text-danger">*</span></label>
                             <select class="form-select" id="cod_metodo" name="cod_metodo" required>
-                                <option value="">Seleccione un método de pago</option>
-                                <option value="EFECTIVO">Efectivo</option>
-                                <option value="TRANSFERENCIA">Transferencia</option>
-                                <option value="PAGOMOVIL">Pago Móvil</option>
-                                <option value="TARJETA">Tarjeta de Crédito/Débito</option>
+                                <option value="" selected disabled>Seleccione un método de pago</option>
                             </select>
                             <div class="invalid-feedback">
                                 Por favor seleccione un método de pago.
@@ -239,7 +225,8 @@ ob_start();
         </div>
     </div>
 
-    <div class="modal fade" id="modalEditar" tabindex="-1" aria-labelledby="modalEditarLabel" aria-hidden="true">
+    <!-- Modal para editar pago -->
+    <div class="modal fade" id="modalEditar" tabindex="-1" aria-labelledby="modalEditarLabel" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
@@ -261,111 +248,6 @@ ob_start();
         </div>
     </div>
 
-    <template id="templateFormulario">
-        <div class="container-fluid p-0">
-            <form id="formPago" class="needs-validation" novalidate>
-                <input type="hidden" name="id_pago" id="id_pago">
-                <input type="hidden" name="id_pedido" id="id_pedido">
-                
-                <!-- Sección de información del pedido (se muestra solo cuando se procesa un pedido) -->
-                <div class="alert alert-info mb-4" id="pedido-info" style="display: none;">
-                    <h5 class="alert-heading"><i class="fas fa-shopping-cart me-2"></i>Información del Pedido</h5>
-                    <hr>
-                    <div id="info-pedido"></div>
-                </div>
-                
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="banco" class="form-label">
-                            <i class="fas fa-university me-1"></i>Banco *
-                        </label>
-                        <input type="text" 
-                               class="form-control" 
-                               id="banco" 
-                               name="banco" 
-                               placeholder="Ingrese el nombre del banco"
-                               required>
-                        <div class="invalid-feedback">
-                            Por favor ingrese el nombre del banco
-                        </div>
-                    </div>
-                    
-                    <div class="col-md-6 mb-3">
-                        <label for="referencia" class="form-label">
-                            <i class="fas fa-hashtag me-1"></i>Referencia *
-                        </label>
-                        <input type="text" 
-                               class="form-control" 
-                               id="referencia" 
-                               name="referencia" 
-                               placeholder="Ingrese la referencia del pago"
-                               required>
-                        <div class="invalid-feedback">
-                            Por favor ingrese la referencia del pago
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="fecha" class="form-label">
-                            <i class="fas fa-calendar-alt me-1"></i>Fecha *
-                        </label>
-                        <input type="date" 
-                               class="form-control" 
-                               id="fecha" 
-                               name="fecha" 
-                               required>
-                        <div class="invalid-feedback">
-                            Por favor seleccione la fecha del pago
-                        </div>
-                    </div>
-                    
-                    <div class="col-md-6 mb-3">
-                        <label for="monto" class="form-label">
-                            <i class="fas fa-money-bill-wave me-1"></i>Monto *
-                        </label>
-                        <input type="number" 
-                               class="form-control" 
-                               id="monto" 
-                               name="monto" 
-                               placeholder="Ingrese el monto"
-                               step="0.01"
-                               min="0"
-                               required>
-                        <div class="invalid-feedback">
-                            Por favor ingrese un monto válido
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="cod_metodo" class="form-label">
-                            <i class="fas fa-credit-card me-1"></i>Método de Pago *
-                        </label>
-                        <select class="form-select" id="cod_metodo" name="cod_metodo" required>
-                            <option value="" selected disabled>Seleccione un método</option>
-                            <!-- Opciones se cargarán dinámicamente -->
-                        </select>
-                        <div class="invalid-feedback">
-                            Por favor seleccione un método de pago
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-1"></i>Cancelar
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-1"></i>Guardar Pago
-                    </button>
-                </div>
-            </form>
-        </div>
-    </template>
-
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
@@ -376,7 +258,5 @@ ob_start();
 </body>
 </html>
 <?php
-// Al final del archivo listar.php
 $content = ob_get_clean();
-
 include 'Assets/layouts/base.php';
