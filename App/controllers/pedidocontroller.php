@@ -248,29 +248,29 @@ switch ($action) {
             http_response_code(500);
             echo json_encode([
                 'success' => false, 
-                'message' => 'Error al obtener el detalle del pedido: ' . $e->getMessage(),
-                'trace' => DEBUG_MODE ? $e->getTraceAsString() : null
-            ], JSON_UNESCAPED_UNICODE);
+                'message' => 'Error al obtener el detalle del pedido: ' . $e->getMessage()
+            ]);
         }
         break;
 
-    case 'eliminar':
+    case 'listarPendientes':
         header('Content-Type: application/json');
-        if (isset($_POST['id_pedido'])) {
-            try {
-                $result = $pedido->eliminar($_POST['id_pedido']);
-                echo json_encode([
-                    'success' => $result,
-                    'message' => $result ? 'Pedido eliminado correctamente' : 'No se pudo eliminar el pedido'
-                ]);
-            } catch (Exception $e) {
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Error al eliminar el pedido: ' . $e->getMessage()
-                ]);
-            }
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Falta el ID del pedido']);
+        try {
+            $pedidos = $pedido->listar(0); // Estado 0 para pedidos pendientes
+            
+            // Formatear la respuesta para incluir la información necesaria
+            $response = [
+                'success' => true,
+                'data' => $pedidos
+            ];
+            
+            echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error al listar los pedidos pendientes: ' . $e->getMessage()
+            ]);
         }
         break;
 
@@ -282,8 +282,22 @@ switch ($action) {
             $pedidos = $pedido->listar($estado);
             echo json_encode(['data' => $pedidos]);
         } else {
-            $pedidos = $pedido->listar(0); // Por defecto mostrar solo por pagar
+            $pedidos = $pedido->listar(1); // Por defecto mostrar solo pagados
             include 'app/views/pedido/listar.php';
+        }
+        break;
+        
+    case 'listarPendientes':
+        header('Content-Type: application/json');
+        try {
+            $pedidos = $pedido->listar(0); // Estado 0 para pedidos pendientes
+            echo json_encode(['success' => true, 'data' => $pedidos]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error al listar los pedidos pendientes: ' . $e->getMessage()
+            ]);
         }
         break;
 

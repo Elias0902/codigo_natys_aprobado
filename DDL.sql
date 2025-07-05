@@ -72,11 +72,11 @@ CREATE TABLE pedido (
   total DECIMAL(10,2) NOT NULL,
   cant_producto INT NOT NULL,
   ced_cliente VARCHAR(20) NOT NULL,
-  id_pago INT NOT NULL,
-  estado TINYINT(4) NOT NULL DEFAULT 1 COMMENT '0=Anulado, 1=Activo',
+  id_pago INT NULL,
+  estado TINYINT(4) NOT NULL DEFAULT 0 COMMENT '0=Pendiente, 1=Pagado, 2=Anulado',
   PRIMARY KEY (id_pedido),
   FOREIGN KEY (ced_cliente) REFERENCES cliente(ced_cliente) ON DELETE CASCADE,
-  FOREIGN KEY (id_pago) REFERENCES pago(id_pago) ON DELETE CASCADE
+  FOREIGN KEY (id_pago) REFERENCES pago(id_pago) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 -- Tabla detalle_pedido

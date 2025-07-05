@@ -37,7 +37,9 @@ function inicializarDataTable() {
             { 
                 data: 'estado',
                 render: function(data) {
-                    return data == 1 ? 'Activo' : 'Inactivo';
+                    return `<span class="badge ${data == 1 ? 'bg-success' : 'bg-secondary'}">
+                            ${data == 1 ? 'Activo' : 'Inactivo'}
+                          </span>`;
                 }
             },
             {

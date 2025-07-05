@@ -54,7 +54,9 @@ ob_start();
                             <td><?php echo htmlspecialchars($cliente['correo']); ?></td>
                             <td><?php echo htmlspecialchars($cliente['telefono']); ?></td>
                             <td><?php echo htmlspecialchars($cliente['direccion']); ?></td>
-                            <td><?php echo $cliente['estado'] == 1 ? 'Activo' : 'Inactivo'; ?></td>
+                            <td><span class="badge bg-<?php echo $cliente['estado'] == 1 ? 'success' : 'secondary'; ?>">
+                                <?php echo $cliente['estado'] == 1 ? 'Activo' : 'Inactivo'; ?>
+                            </span></td>
                             <td>
                                 <div class="actions">
                                     <a href="index.php?url=cliente&action=editar&ced_cliente=<?php echo $cliente['ced_cliente']; ?>" 

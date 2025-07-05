@@ -23,13 +23,15 @@ ob_start();
         <h1 class="mb-4" style="text-align: center;">Gestión de Pagos</h1>
         
         <div class="d-flex justify-content-between mb-3">
-            <button type="button" class="btn btn-success" id="btnNuevoPago">
+            <h2>Listado de Pagos</h2>
+            <button type="button" class="btn btn-success" id="btnNuevoPago" data-bs-toggle="modal" data-bs-target="#modalSeleccionarPedido">
                 <i class="fas fa-plus-circle me-2"></i>Nuevo Pago
             </button>
             <button type="button" class="btn btn-warning" id="btnToggleEstado">
                 <i class="fas fa-trash-restore me-2"></i>Mostrar No Aprobados
             </button>
         </div>
+
 
         <div class="table-responsive" style="text-align:center;">
             <table id="pagos" class="table table-striped" style="width:100%">
@@ -57,24 +59,181 @@ ob_start();
         </a>
     </div>
 
-    <!-- Modales -->
-    <div class="modal fade" id="modalNuevo" tabindex="-1" aria-labelledby="modalNuevoLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
+    <!-- Modal para seleccionar pedido -->
+    <div class="modal fade" id="modalSeleccionarPedido" tabindex="-1" aria-labelledby="modalSeleccionarPedidoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title" id="modalNuevoLabel">
-                        <i class="fas fa-money-bill-wave me-2"></i>
-                        Nuevo Pago
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalSeleccionarPedidoLabel">
+                        <i class="fas fa-shopping-cart me-2"></i>
+                        Pedidos Pendientes de Pago
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body" id="contenidoNuevo">
-                    <div class="text-center py-4">
-                        <div class="spinner-border text-success" role="status">
-                            <span class="visually-hidden">Cargando...</span>
+                <div class="modal-body">
+                    <?php if (!empty($pedidosPendientes)): ?>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID Pedido</th>
+                                        <th>Cliente</th>
+                                        <th>Fecha</th>
+                                        <th>Total</th>
+                                        <th>Productos</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($pedidosPendientes as $pedido): ?>
+                                        <tr>
+                                            <td>#<?= htmlspecialchars($pedido['id_pedido']) ?></td>
+                                            <td><?= htmlspecialchars($pedido['nomcliente'] . ' (' . $pedido['ced_cliente'] . ')') ?></td>
+                                            <td><?= date('d/m/Y', strtotime($pedido['fecha'])) ?></td>
+                                            <td>$<?= number_format($pedido['total'], 2, ',', '.') ?></td>
+                                            <td><?= $pedido['cant_producto'] ?> producto(s)</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-success btn-seleccionar-pedido" 
+                                                        data-id-pedido="<?= $pedido['id_pedido'] ?>"
+                                                        data-total="<?= $pedido['total'] ?>"
+                                                        data-cliente="<?= htmlspecialchars($pedido['nomcliente'] . ' (' . $pedido['ced_cliente'] . ')') ?>"
+                                                        data-fecha="<?= date('d/m/Y', strtotime($pedido['fecha'])) ?>">
+                                                    <i class="fas fa-check me-1"></i> Seleccionar
+                                                </button>
+                                                <button class="btn btn-sm btn-info btn-ver-detalle" 
+                                                        data-id-pedido="<?= $pedido['id_pedido'] ?>">
+                                                    <i class="fas fa-eye me-1"></i> Ver Detalle
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
                         </div>
-                        <p class="mt-2 text-muted">Preparando formulario...</p>
+                    <?php else: ?>
+                        <div class="alert alert-info mb-0">
+                            <i class="fas fa-info-circle me-2"></i> No hay pedidos pendientes de pago en este momento.
+                        </div>
+                    <?php endif; ?>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para nuevo pago -->
+    <div class="modal fade" id="modalNuevoPago" tabindex="-1" aria-labelledby="modalNuevoPagoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="modalNuevoPagoLabel">
+                        <i class="fas fa-money-bill-wave me-2"></i>
+                        Procesar Pago
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Información del pedido -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Detalles del Pedido</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Pedido #:</strong> <span id="pedido-numero"></span></p>
+                                    <p class="mb-1"><strong>Cliente:</strong> <span id="pedido-cliente"></span></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Fecha:</strong> <span id="pedido-fecha"></span></p>
+                                    <p class="mb-1"><strong>Total a pagar:</strong> $<span id="pedido-total">0.00</span></p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- Formulario de pago -->
+                    <form id="formPago" class="needs-validation" novalidate>
+                        <input type="hidden" name="id_pedido" id="id_pedido">
+                        
+                        <div class="mb-3">
+                            <label for="banco" class="form-label">Banco <span class="text-danger">*</span></label>
+                            <select class="form-select" id="banco" name="banco" required>
+                                <option value="">Seleccione un banco</option>
+                                <option value="Bancaribe">Bancaribe</option>
+                                <option value="Banesco">Banesco</option>
+                                <option value="Mercantil">Mercantil</option>
+                                <option value="Venezuela">Banco de Venezuela</option>
+                                <option value="BOD">BOD</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                            <div class="invalid-feedback">
+                                Por favor seleccione un banco.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="referencia" class="form-label">Número de Referencia <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="referencia" name="referencia" required 
+                                   placeholder="Ingrese el número de referencia del pago">
+                            <div class="invalid-feedback">
+                                Por favor ingrese el número de referencia.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="monto" class="form-label">Monto Pagado <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="monto" name="monto" 
+                                       step="0.01" min="0.01" required>
+                                <div class="invalid-feedback">
+                                    Por favor ingrese el monto pagado.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="cod_metodo" class="form-label">Método de Pago <span class="text-danger">*</span></label>
+                            <select class="form-select" id="cod_metodo" name="cod_metodo" required>
+                                <option value="">Seleccione un método de pago</option>
+                                <option value="EFECTIVO">Efectivo</option>
+                                <option value="TRANSFERENCIA">Transferencia</option>
+                                <option value="PAGOMOVIL">Pago Móvil</option>
+                                <option value="TARJETA">Tarjeta de Crédito/Débito</option>
+                            </select>
+                            <div class="invalid-feedback">
+                                Por favor seleccione un método de pago.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="fecha_pago" class="form-label">Fecha del Pago <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="fecha_pago" name="fecha_pago" required>
+                            <div class="invalid-feedback">
+                                Por favor ingrese la fecha del pago.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notas" class="form-label">Notas (Opcional)</label>
+                            <textarea class="form-control" id="notas" name="notas" rows="2" 
+                                     placeholder="Ingrese cualquier nota adicional sobre el pago"></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <button type="button" class="btn btn-secondary me-md-2" data-bs-dismiss="modal">
+                                <i class="fas fa-times me-1"></i> Cancelar
+                            </button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-1"></i> Guardar Pago
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -106,6 +265,14 @@ ob_start();
         <div class="container-fluid p-0">
             <form id="formPago" class="needs-validation" novalidate>
                 <input type="hidden" name="id_pago" id="id_pago">
+                <input type="hidden" name="id_pedido" id="id_pedido">
+                
+                <!-- Sección de información del pedido (se muestra solo cuando se procesa un pedido) -->
+                <div class="alert alert-info mb-4" id="pedido-info" style="display: none;">
+                    <h5 class="alert-heading"><i class="fas fa-shopping-cart me-2"></i>Información del Pedido</h5>
+                    <hr>
+                    <div id="info-pedido"></div>
+                </div>
                 
                 <div class="row">
                     <div class="col-md-6 mb-3">

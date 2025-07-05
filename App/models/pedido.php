@@ -38,39 +38,13 @@ class Pedido extends Conexion {
                 throw new Exception('El cliente especificado no existe o está inactivo');
             }
 
-            // 2. Obtener método de pago por defecto (EFECTIVO)
-            $cod_metodo = 'EFECTIVO';
-            
-            $queryMetodo = "SELECT COUNT(*) FROM metodo WHERE codigo = :cod_metodo AND estado = 1";
-            $stmtMetodo = $this->conn->prepare($queryMetodo);
-            $stmtMetodo->bindParam(":cod_metodo", $cod_metodo);
-            $stmtMetodo->execute();
-            
-            if ($stmtMetodo->fetchColumn() == 0) {
-                throw new Exception('El método de pago especificado no existe o está inactivo');
-            }
-
-            // 3. Crear el pago
-            $queryPago = "INSERT INTO pago (fecha, monto, cod_metodo, estado) 
-                          VALUES (CURDATE(), :monto, :cod_metodo, 1)";
-            $stmtPago = $this->conn->prepare($queryPago);
-            $stmtPago->bindParam(":monto", $total);
-            $stmtPago->bindParam(":cod_metodo", $cod_metodo);
-            
-            if (!$stmtPago->execute()) {
-                $error = $stmtPago->errorInfo();
-                throw new Exception('Error al crear el pago: ' . ($error[2] ?? 'Error desconocido'));
-            }
-            $id_pago = $this->conn->lastInsertId();
-
-            // 4. Crear el pedido con estado 0 (por pagar)
-            $queryPedido = "INSERT INTO pedido (fecha, total, cant_producto, ced_cliente, id_pago, estado)
-                           VALUES (CURDATE(), :total, :cant_producto, :ced_cliente, :id_pago, 0)";
+            // 2. Crear el pedido con estado 0 (por pagar) y sin pago asociado inicialmente
+            $queryPedido = "INSERT INTO pedido (fecha, total, cant_producto, ced_cliente, estado)
+                           VALUES (CURDATE(), :total, :cant_producto, :ced_cliente, 0)";
             $stmtPedido = $this->conn->prepare($queryPedido);
             $stmtPedido->bindParam(":total", $total);
             $stmtPedido->bindParam(":cant_producto", $cant_producto);
             $stmtPedido->bindParam(":ced_cliente", $ced_cliente);
-            $stmtPedido->bindParam(":id_pago", $id_pago);
             
             if (!$stmtPedido->execute()) {
                 $error = $stmtPedido->errorInfo();
@@ -269,11 +243,23 @@ class Pedido extends Conexion {
 
     public function obtenerDetalle($id_pedido) {
         try {
-            // 1. Obtener información básica del pedido
-            $queryPedido = "SELECT p.*, c.nomcliente as nombre_cliente 
-                          FROM pedido p 
-                          JOIN cliente c ON p.ced_cliente = c.ced_cliente 
-                          WHERE p.id_pedido = :id_pedido";
+            // 1. Obtener información básica del pedido y datos del cliente
+            $queryPedido = "SELECT 
+                p.*, 
+                c.ced_cliente,
+                c.nomcliente as nombre_cliente,
+                c.telefono as telefono_cliente,
+                c.direccion as direccion_cliente,
+                c.correo as email_cliente,
+                pa.monto as monto_pagado,
+                m.detalle as metodo_pago,
+                pa.fecha as fecha_pago,
+                pa.referencia as referencia_pago
+            FROM pedido p 
+            JOIN cliente c ON p.ced_cliente = c.ced_cliente 
+            LEFT JOIN pago pa ON p.id_pago = pa.id_pago
+            LEFT JOIN metodo m ON pa.cod_metodo = m.codigo
+            WHERE p.id_pedido = :id_pedido";
             
             $stmtPedido = $this->conn->prepare($queryPedido);
             $stmtPedido->bindParam(":id_pedido", $id_pedido, PDO::PARAM_INT);
@@ -285,34 +271,88 @@ class Pedido extends Conexion {
             
             $pedido = $stmtPedido->fetch(PDO::FETCH_ASSOC);
             
-            // 2. Obtener los detalles del pedido
-            $queryDetalle = "SELECT d.*, pr.nombre as nombre_producto, pr.precio 
-                           FROM detalle_pedido d 
-                           JOIN producto pr ON d.cod_producto = pr.cod_producto 
-                           WHERE d.id_pedido = :id_pedido";
+            // 2. Obtener los detalles del pedido con información del producto
+            $queryDetalle = "SELECT 
+                d.*, 
+                pr.nombre as nombre_producto, 
+                pr.precio as precio_unitario,
+                (d.cantidad * d.precio) as subtotal
+            FROM detalle_pedido d 
+            JOIN producto pr ON d.cod_producto = pr.cod_producto 
+            WHERE d.id_pedido = :id_pedido";
             
             $stmtDetalle = $this->conn->prepare($queryDetalle);
             $stmtDetalle->bindParam(":id_pedido", $id_pedido, PDO::PARAM_INT);
             $stmtDetalle->execute();
             $detalles = $stmtDetalle->fetchAll(PDO::FETCH_ASSOC);
             
-            // 3. Calcular totales
+            // 3. Calcular totales y procesar datos
+            $subtotal = 0;
+            $impuestos = 0; // Podrías calcular impuestos si es necesario
             $total = 0;
+            
             foreach ($detalles as &$detalle) {
                 $detalle['subtotal'] = $detalle['cantidad'] * $detalle['precio'];
-                $total += $detalle['subtotal'];
+                $subtotal += $detalle['subtotal'];
             }
             
-            // 4. Estructurar la respuesta
-            return [
-                'pedido' => array_merge($pedido, [
-                    'total' => $total,
-                    'metodo_pago' => 'No especificado',
-                    'referencia' => 'N/A',
-                    'banco' => 'N/A'
-                ]),
-                'detalle' => $detalles
+            $total = $subtotal + $impuestos;
+            
+            // Formatear fechas
+            $fecha_creacion = new \DateTime($pedido['fecha']);
+            $fecha_pago = !empty($pedido['fecha_pago']) ? new \DateTime($pedido['fecha_pago']) : null;
+            
+            // Estructurar la respuesta
+            $resultado = [
+                'pedido' => [
+                    'id_pedido' => (int)$pedido['id_pedido'],
+                    'fecha_creacion' => $fecha_creacion->format('Y-m-d'),
+                    'fecha_creacion_formatted' => $fecha_creacion->format('d/m/Y'),
+                    'total' => (float)$pedido['total'],
+                    'total_formatted' => number_format($pedido['total'], 2, ',', '.'),
+                    'cant_producto' => (int)$pedido['cant_producto'],
+                    'estado' => (int)$pedido['estado'],
+                    'estado_texto' => $pedido['estado'] == 1 ? 'Pagado' : 'Pendiente de pago',
+                    'id_pago' => $pedido['id_pago'] ? (int)$pedido['id_pago'] : null,
+                    'metodo_pago' => $pedido['metodo_pago'] ?? 'No especificado',
+                    'referencia_pago' => $pedido['referencia_pago'] ?? 'N/A',
+                    'fecha_pago' => $fecha_pago ? $fecha_pago->format('Y-m-d H:i:s') : null,
+                    'fecha_pago_formatted' => $fecha_pago ? $fecha_pago->format('d/m/Y H:i') : 'Pendiente'
+                ],
+                'cliente' => [
+                    'cedula' => $pedido['ced_cliente'],
+                    'nombre' => $pedido['nombre_cliente'],
+                    'nombre_completo' => $pedido['nombre_cliente'] ?? '',
+                    'telefono' => $pedido['telefono_cliente'] ?? 'No especificado',
+                    'direccion' => $pedido['direccion_cliente'] ?? 'No especificada',
+                    'email' => $pedido['email_cliente'] ?? 'No especificado'
+                ],
+                'detalles' => array_map(function($detalle) {
+                    return [
+                        'cod_producto' => $detalle['cod_producto'],
+                        'nombre_producto' => $detalle['nombre_producto'],
+                        'cantidad' => (int)$detalle['cantidad'],
+                        'precio_unitario' => (float)$detalle['precio_unitario'],
+                        'precio_unitario_formatted' => number_format($detalle['precio_unitario'], 2, ',', '.'),
+                        'subtotal' => (float)$detalle['subtotal'],
+                        'subtotal_formatted' => number_format($detalle['subtotal'], 2, ',', '.')
+                    ];
+                }, $detalles),
+                'resumen' => [
+                    'subtotal' => (float)$subtotal,
+                    'subtotal_formatted' => number_format($subtotal, 2, ',', '.'),
+                    'impuestos' => (float)$impuestos,
+                    'impuestos_formatted' => number_format($impuestos, 2, ',', '.'),
+                    'total' => (float)$total,
+                    'total_formatted' => number_format($total, 2, ',', '.'),
+                    'total_pagado' => (float)($pedido['monto_pagado'] ?? 0),
+                    'total_pagado_formatted' => isset($pedido['monto_pagado']) ? number_format($pedido['monto_pagado'], 2, ',', '.') : '0,00',
+                    'pendiente_pago' => (float)($total - ($pedido['monto_pagado'] ?? 0)),
+                    'pendiente_pago_formatted' => number_format($total - ($pedido['monto_pagado'] ?? 0), 2, ',', '.')
+                ]
             ];
+            return $resultado;
+            
         } catch (\Exception $e) {
             error_log("Error en obtenerDetalle: " . $e->getMessage() . "\n" . $e->getTraceAsString());
             throw $e;

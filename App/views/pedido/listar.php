@@ -19,12 +19,16 @@ ob_start();
         <h1 class="mb-4" style="text-align: center;">Gestión de Pedidos</h1>
 
         <div class="d-flex justify-content-between mb-3">
-            <button type="button" class="btn btn-success" id="btnNuevoPedido">
-                <i class="fas fa-plus-circle me-2"></i>Nuevo Pedido
-            </button>
+            <div>
+                <button type="button" class="btn btn-success me-2" id="btnNuevoPedido">
+                    <i class="fas fa-plus-circle me-2"></i>Nuevo Pedido
+                </button>
+                <button type="button" class="btn btn-warning" id="btnVerPendientes">
+                    <i class="fas fa-clock me-2"></i>Ver Pendientes de Pago
+                </button>
+            </div>
             <div class="btn-group" role="group">
-                <button type="button" class="btn btn-warning filter-btn active" data-estado="0">Por pagar</button>
-                <button type="button" class="btn btn-success filter-btn" data-estado="1">Pagados</button>
+                <button type="button" class="btn btn-success filter-btn active" data-estado="1">Pagados</button>
                 <button type="button" class="btn btn-secondary filter-btn" data-estado="all">Todos</button>
             </div>
         </div>
@@ -180,6 +184,40 @@ ob_start();
         </div>
     </div>
 
+    <!-- Modal para pedidos pendientes -->
+    <div class="modal fade" id="modalPendientes" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title">Pedidos Pendientes de Pago</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table id="tablaPendientes" class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Cliente</th>
+                                    <th>Fecha</th>
+                                    <th>Total</th>
+                                    <th>Productos</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Los datos se cargarán dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal para agregar producto -->
     <div class="modal fade" id="modalAgregarProducto" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
@@ -236,7 +274,51 @@ ob_start();
         // Configurar fecha actual
         $('#fecha').val(new Date().toISOString().split('T')[0]);
 
-        // Inicializar DataTable
+        // Inicializar DataTable de pedidos pendientes
+        const tablaPendientes = $('#tablaPendientes').DataTable({
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
+                decimal: ",",
+                thousands: "."
+            },
+            ajax: {
+                url: 'index.php?url=pedido&action=listarPendientes',
+                dataSrc: 'data'
+            },
+            columns: [
+                { data: 'id_pedido' },
+                { 
+                    data: null,
+                    render: function(data) {
+                        return `<strong>${data.nomcliente}</strong><br><small>${data.ced_cliente}</small>`;
+                    }
+                },
+                { data: 'fecha' },
+                { 
+                    data: 'total',
+                    render: function(data) {
+                        return `$${parseFloat(data).toFixed(2)}`;
+                    }
+                },
+                { data: 'cant_producto' },
+                {
+                    data: null,
+                    render: function(data) {
+                        return `
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button class="btn btn-info btn-sm ver-detalle" data-id="${data.id_pedido}" title="Ver detalle">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-success btn-sm marcar-pagado" data-id="${data.id_pedido}" title="Marcar como pagado">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            </div>`;
+                    }
+                }
+            ]
+        });
+
+        // Inicializar DataTable de pedidos principales
         const tablaPedidos = $('#tablaPedidos').DataTable({
             language: {
                 url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
@@ -298,6 +380,33 @@ ob_start();
             ]
         });
 
+        // Mostrar modal de pedidos pendientes
+        $('#btnVerPendientes').click(function() {
+            tablaPendientes.ajax.reload();
+            $('#modalPendientes').modal('show');
+        });
+
+        // Marcar pedido como pagado
+        $('#tablaPendientes').on('click', '.marcar-pagado', function() {
+            const idPedido = $(this).data('id');
+            if (confirm('¿Está seguro de marcar este pedido como pagado?')) {
+                $.post('index.php?url=pedido&action=marcarPagado', { id_pedido: idPedido })
+                    .done(function(response) {
+                        const result = typeof response === 'string' ? JSON.parse(response) : response;
+                        if (result.success) {
+                            toastr.success('Pedido marcado como pagado');
+                            tablaPendientes.ajax.reload();
+                            tablaPedidos.ajax.reload();
+                        } else {
+                            toastr.error(result.message || 'Error al actualizar el pedido');
+                        }
+                    })
+                    .fail(function() {
+                        toastr.error('Error al procesar la solicitud');
+                    });
+            }
+        });
+
         // Filtrar por estado
         $('.filter-btn').click(function() {
             const estado = $(this).data('estado');
@@ -314,11 +423,16 @@ ob_start();
         });
 
         // Ver detalle del pedido
-        $('#tablaPedidos').on('click', '.ver-detalle', function(e) {
+        function verDetallePedido(idPedido) {
+            cargarFormularioPedido(idPedido, true);
+        }
+
+        // Manejador de eventos para ver detalles en ambas tablas
+        $('#tablaPedidos, #tablaPendientes').on('click', '.ver-detalle', function(e) {
             e.preventDefault();
             e.stopPropagation();
             const idPedido = $(this).data('id');
-            cargarFormularioPedido(idPedido, true);
+            verDetallePedido(idPedido);
         });
 
         // Nuevo pedido

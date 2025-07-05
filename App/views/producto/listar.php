@@ -48,7 +48,9 @@ ob_start();
                             <td><?php echo htmlspecialchars($producto['nombre']); ?></td>
                             <td><?php echo htmlspecialchars($producto['precio']); ?></td>
                             <td><?php echo htmlspecialchars($producto['unidad']); ?></td>
-                            <td><?php echo $producto['estado'] == 1 ? 'Activo' : 'Inactivo'; ?></td>
+                            <td><span class="badge bg-<?php echo $producto['estado'] == 1 ? 'success' : 'secondary'; ?>">
+                                <?php echo $producto['estado'] == 1 ? 'Activo' : 'Inactivo'; ?>
+                            </span></td>
                             <td>
                                 <div class="actions">
                                     <a href="#" class="editar" 

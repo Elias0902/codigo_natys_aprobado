@@ -24,6 +24,26 @@
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* ===== ESTILOS PARA BADGES ===== */
+.badge {
+    font-size: 0.875em;
+    font-weight: 600;
+    padding: 0.4em 0.8em;
+    border-radius: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge.bg-success {
+    background-color: #10b981 !important;
+    color: white !important;
+}
+
+.badge.bg-secondary {
+    background-color: #6c757d !important;
+    color: white !important;
+}
+
 /* ===== ESTILOS GENERALES ===== */
 * {
   box-sizing: border-box;
