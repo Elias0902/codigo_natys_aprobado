@@ -59,7 +59,7 @@ ob_start();
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-4 text-center mb-4 mb-md-0">
-                                <img src="Assets/img/avatar.png" alt="Foto de perfil" class="profile-img rounded-circle mb-3">
+                                <img src="/Natys/Assets/img/john_doe.png" alt="Foto de perfil" class="profile-img rounded-circle mb-3" onerror="this.src='/Natys/Assets/img/avatar.png'">
                                 <h5 class="mb-1"><?php echo htmlspecialchars($_SESSION['usuario']['usuario']); ?></h5>
                                 <p class="text-muted mb-3"><?php echo htmlspecialchars(ucfirst($_SESSION['usuario']['rol'])); ?></p>
                                 

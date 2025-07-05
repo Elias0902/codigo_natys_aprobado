@@ -13,23 +13,42 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <style>
         :root {
-            --primary-color:rgb(243, 60, 60);
-            --secondary-color:rgb(243, 60, 60);
+            --primary-color: rgb(243, 60, 60);
+            --secondary-color: rgb(243, 60, 60);
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #f8f9fa;
+            --input-bg: #ffffff;
+            --input-text: #212529;
+            --link-color: #ffffff;
+        }
+        
+        /* Estilos para el modo claro */
+        [data-theme="light"] {
+            --bg-color: #f5f7fb;
+            --card-bg: #ffffff;
+            --text-color: #212529;
+            --input-bg: #ffffff;
+            --input-text: #212529;
+            --link-color: #000000;
         }
         
         body {
-            background-color: #f5f7fb;
+            background-color: var(--bg-color);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             min-height: 100vh;
             display: flex;
             align-items: center;
+            color: var(--text-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         
         .auth-card {
             border-radius: 12px;
             overflow: hidden;
             border: none;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background-color: var(--card-bg);
         }
         
         .card-header {
@@ -40,12 +59,16 @@
         .form-control {
             padding: 0.75rem 1rem;
             border-radius: 8px;
-            border: 1px solid #e0e0e0;
+            border: 1px solid #ced4da;
+            background-color: var(--input-bg);
+            color: var(--input-text);
         }
         
         .form-control:focus {
+            background-color: var(--input-bg);
+            color: var(--input-text);
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+            box-shadow: 0 0 0 0.25rem rgba(204, 29, 29, 0.25);
         }
         
         .btn-primary {
@@ -54,6 +77,7 @@
             padding: 0.75rem;
             border-radius: 8px;
             font-weight: 500;
+            width: 100%;
         }
         
         .btn-primary:hover {
@@ -63,6 +87,12 @@
         .auth-logo {
             text-align: center;
             margin-bottom: 2rem;
+        }
+        
+        .input-group-text {
+            background-color: var(--input-bg);
+            border: 1px solid #ced4da;
+            color: var(--input-text);
         }
         
         .auth-logo img {
@@ -87,8 +117,14 @@
     <div class="container py-5">
         <div class="row justify-content-center">
             <div class="col-md-8 col-lg-6">
-                <div class="auth-logo">
+                <div class="auth-logo mb-4">
                     <img src="../Natys/Assets/img/Natys.png" alt="Logo" class="img-fluid">
+                </div>
+                
+                <div class="text-end mb-3">
+                    <button id="themeToggle" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-moon"></i> Modo Oscuro
+                    </button>
                 </div>
                 
                 <div class="auth-card card">
@@ -98,7 +134,7 @@
                     <div class="card-body p-4">
                         <form id="formRecuperar" method="POST" action="index.php?url=login&action=solicitarRecuperacion">
                             <div class="mb-3">
-                                <p class="text-muted">Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.</p>
+                                <p style="color: var(--text-color)">Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.</p>
                             </div>
                             <div class="mb-3">
                                 <label for="correo" class="form-label">Correo Electrónico</label>
@@ -131,6 +167,29 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     
     <script>
+    // Función para cambiar el tema
+    function setTheme(theme) {
+        if (theme === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
+            document.querySelector('#themeToggle').innerHTML = '<i class="fas fa-moon"></i> Modo Oscuro';
+            localStorage.setItem('theme', 'light');
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+            document.querySelector('#themeToggle').innerHTML = '<i class="fas fa-sun"></i> Modo Claro';
+            localStorage.setItem('theme', 'dark');
+        }
+    }
+    
+    // Verificar tema guardado o preferencia del sistema
+    const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+    setTheme(savedTheme);
+    
+    // Alternar tema al hacer clic en el botón
+    document.getElementById('themeToggle').addEventListener('click', function() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        setTheme(currentTheme === 'light' ? 'dark' : 'light');
+    });
+    
     $(document).ready(function() {
         // Manejar el envío del formulario de recuperación
         $('#formRecuperar').submit(function(e) {

@@ -715,7 +715,7 @@ ob_start();
                     <td class="precio">${parseFloat(producto.precio).toFixed(2)}</td>
                     <td>${producto.cantidad}</td>
                     <td class="subtotal">${parseFloat(producto.subtotal).toFixed(2)}</td>
-                </tr>
+p                </tr>
             `;
             
             $('#productos-seleccionados').append(fila);
