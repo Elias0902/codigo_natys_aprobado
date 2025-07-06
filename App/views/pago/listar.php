@@ -20,7 +20,7 @@ ob_start();
         <div class="d-flex justify-content-between mb-3">
             <h2>Listado de Pagos</h2>
             <button type="button" class="btn btn-success" id="btnNuevoPago" data-bs-toggle="modal" data-bs-target="#modalSeleccionarPedido">
-                <i class="fas fa-plus-circle me-2"></i>Nuevo Pago
+                <i class="fas fa-plus-circle me-2"></i>Registrar Pago
             </button>
             <button type="button" class="btn btn-warning" id="btnToggleEstado">
                 <i class="fas fa-trash-restore me-2"></i>Mostrar Inactivos

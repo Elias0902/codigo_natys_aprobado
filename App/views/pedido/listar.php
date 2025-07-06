@@ -21,15 +21,11 @@ ob_start();
         <div class="d-flex justify-content-between mb-3">
             <div>
                 <button type="button" class="btn btn-success me-2" id="btnNuevoPedido">
-                    <i class="fas fa-plus-circle me-2"></i>Nuevo Pedido
+                    <i class="fas fa-plus-circle me-2"></i>Registrar Pedido
                 </button>
                 <button type="button" class="btn btn-warning" id="btnVerPendientes">
                     <i class="fas fa-clock me-2"></i>Ver Pendientes de Pago
                 </button>
-            </div>
-            <div class="btn-group" role="group">
-                <button type="button" class="btn btn-success filter-btn active" data-estado="1">Pagados</button>
-                <button type="button" class="btn btn-secondary filter-btn" data-estado="all">Todos</button>
             </div>
         </div>
 
@@ -110,7 +106,7 @@ ob_start();
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-success text-white">
-                <h5 class="modal-title" id="modalFormularioTitulo">Nuevo Pedido</h5>
+                <h5 class="modal-title" id="modalFormularioTitulo">Registrar Pedido</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
