@@ -47,7 +47,6 @@ ob_start();
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Los datos se cargarán dinámicamente via AJAX -->
                 </tbody>
             </table>
         </div>
@@ -58,133 +57,127 @@ ob_start();
         </a>
     </div>
 
-    <!-- Modal para detalles del pedido -->
     <div class="modal fade" id="modalDetalle" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">Detalle del Pedido #<span id="pedidoId"></span></h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Detalle del Pedido #<span id="pedidoId"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p><strong>Cliente:</strong> <span id="detalleCliente"></span></p>
+                        <p><strong>Fecha:</strong> <span id="detalleFecha"></span></p>
+                        <p><strong>Teléfono:</strong> <span id="detalleTelefono"></span></p>
+                        <p><strong>Dirección:</strong> <span id="detalleDireccion"></span></p>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <p><strong>Total:</strong> $<span id="detalleTotal">0.00</span></p>
+                        <p><strong>Estado:</strong> <span id="detalleEstado" class="badge"></span></p>
+                    </div>
                 </div>
-                <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Producto</th>
+                                <th class="text-end">Precio Unitario</th>
+                                <th class="text-center">Cantidad</th>
+                                <th class="text-end">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detalleProductos">
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                <td class="text-end"><strong>$<span id="detalleTotalFinal">0.00</span></strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="modalFormulario" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="modalFormularioTitulo">Nuevo Pedido</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formPedido">
+                    <input type="hidden" id="id_pedido" name="id_pedido">
+                    
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <p><strong>Cliente:</strong> <span id="detalleCliente"></span></p>
-                            <p><strong>Fecha:</strong> <span id="detalleFecha"></span></p>
-                            <p><strong>Teléfono:</strong> <span id="detalleTelefono"></span></p>
-                            <p><strong>Dirección:</strong> <span id="detalleDireccion"></span></p>
+                            <label for="ced_cliente" class="form-label">Cliente *</label>
+                            <select class="form-select" id="ced_cliente" name="ced_cliente" required>
+                                <option value="">Seleccione un cliente</option>
+                                <?php foreach ($clientes as $cliente): ?>
+                                    <option value="<?php echo $cliente['ced_cliente']; ?>">
+                                        <?php echo htmlspecialchars($cliente['nomcliente'] . ' - ' . $cliente['ced_cliente']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
-                        <div class="col-md-6 text-end">
-                            <p><strong>Total:</strong> $<span id="detalleTotal">0.00</span></p>
-                            <p><strong>Estado:</strong> <span id="detalleEstado" class="badge"></span></p>
-                            <p><strong>Método de pago:</strong> <span id="detalleMetodoPago"></span></p>
-                            <p><strong>Banco:</strong> <span id="detalleBanco"></span></p>
-                            <p><strong>Referencia:</strong> <span id="detalleReferencia"></span></p>
+                        <div class="col-md-6">
+                            <label for="fecha" class="form-label">Fecha</label>
+                            <input type="date" class="form-control" id="fecha" name="fecha" required>
                         </div>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Producto</th>
-                                    <th class="text-end">Precio Unitario</th>
-                                    <th class="text-center">Cantidad</th>
-                                    <th class="text-end">Subtotal</th>
-                                </tr>
-                            </thead>
-                            <tbody id="detalleProductos">
-                                <!-- Los productos se cargarán aquí -->
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <td colspan="3" class="text-end"><strong>Total:</strong></td>
-                                    <td class="text-end"><strong>$<span id="detalleTotalFinal">0.00</span></strong></td>
-                                </tr>
-                            </tfoot>
-                        </table>
+
+                    <div class="mb-3">
+                        <label class="form-label">Productos *</label>
+                        <div class="table-responsive">
+                            <table class="table table-sm" id="tablaProductos">
+                                <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th>Precio</th>
+                                        <th>Cantidad</th>
+                                        <th>Subtotal</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="productos-seleccionados">
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                        <td id="total-pedido-form">0.00</td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-primary" id="btnAgregarProducto">
+                            <i class="fas fa-plus me-1"></i>Agregar Producto
+                        </button>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-1"></i>Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Guardar Pedido
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Modal para formulario de pedido -->
-    <div class="modal fade" id="modalFormulario" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title" id="modalFormularioTitulo">Nuevo Pedido</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="formPedido">
-                        <input type="hidden" id="id_pedido" name="id_pedido">
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="ced_cliente" class="form-label">Cliente *</label>
-                                <select class="form-select" id="ced_cliente" name="ced_cliente" required>
-                                    <option value="">Seleccione un cliente</option>
-                                    <?php foreach ($clientes as $cliente): ?>
-                                        <option value="<?php echo $cliente['ced_cliente']; ?>">
-                                            <?php echo htmlspecialchars($cliente['nomcliente'] . ' - ' . $cliente['ced_cliente']); ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="fecha" class="form-label">Fecha</label>
-                                <input type="date" class="form-control" id="fecha" name="fecha" required>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Productos *</label>
-                            <div class="table-responsive">
-                                <table class="table table-sm" id="tablaProductos">
-                                    <thead>
-                                        <tr>
-                                            <th>Producto</th>
-                                            <th>Precio</th>
-                                            <th>Cantidad</th>
-                                            <th>Subtotal</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="productos-seleccionados">
-                                        <!-- Productos se agregarán aquí -->
-                                    </tbody>
-                                    <tfoot>
-                                        <tr>
-                                            <td colspan="3" class="text-end"><strong>Total:</strong></td>
-                                            <td id="total-pedido-form">0.00</td>
-                                            <td></td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-                            <button type="button" class="btn btn-sm btn-primary" id="btnAgregarProducto">
-                                <i class="fas fa-plus me-1"></i>Agregar Producto
-                            </button>
-                        </div>
-
-                        <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                <i class="fas fa-times me-1"></i>Cancelar
-                            </button>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-1"></i>Guardar Pedido
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal para pedidos pendientes -->
     <div class="modal fade" id="modalPendientes" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
@@ -206,7 +199,6 @@ ob_start();
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- Los datos se cargarán dinámicamente -->
                             </tbody>
                         </table>
                     </div>
@@ -218,7 +210,6 @@ ob_start();
         </div>
     </div>
 
-    <!-- Modal para agregar producto -->
     <div class="modal fade" id="modalAgregarProducto" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -277,4 +268,3 @@ ob_start();
 <?php
 $content = ob_get_clean();
 include 'Assets/layouts/base.php';
-?>

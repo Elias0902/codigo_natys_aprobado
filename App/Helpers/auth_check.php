@@ -1,14 +1,12 @@
 <?php
 session_start();
 
-// Verificar timeout de inactividad
 if (isset($_SESSION['usuario'])) {
-    $inactive = 300; // 5 minutos en segundos
-    $warning_time = 60; // 1 minuto en segundos
+    $inactive = 300; 
+    $warning_time = 60; 
     
     $session_life = time() - ($_SESSION['last_activity'] ?? 0);
-    
-    // Mostrar advertencia si faltan 1 minuto o menos
+
     if ($session_life > ($inactive - $warning_time)) {
         $remaining = $inactive - $session_life;
         if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
@@ -23,7 +21,6 @@ if (isset($_SESSION['usuario'])) {
         }
     }
     
-    // Cerrar sesión si excede el tiempo inactivo
     if ($session_life > $inactive) {
         session_unset();
         session_destroy();
@@ -32,19 +29,18 @@ if (isset($_SESSION['usuario'])) {
             echo json_encode([
                 'success' => false, 
                 'message' => 'Sesión expirada por inactividad', 
-                'redirect' => 'index.php?url=login',
+                'redirect' => 'index.php?url=login&Reason=Expulsion-Por-inactividad',
                 'timeout' => true
             ]);
             exit;
         } else {
             $_SESSION['error_login'] = 'Tu sesión ha expirado por inactividad';
-            header('Location: index.php?url=login');
+            header('Location: index.php?url=login&Reason=Expulsion-Por-inactividad');
             exit;
         }
     }
 }
 
-// Actualizar marca de tiempo de última actividad
 $_SESSION['last_activity'] = time();
 
 if (!isset($_SESSION['usuario'])) {
@@ -64,8 +60,8 @@ if (!isset($_SESSION['usuario'])) {
 }
 
 /**
- * Verifica si el usuario tiene el rol necesario para acceder
- * @param array $rolesPermitidos Roles que tienen permiso
+ 
+ * @param array $rolesPermitidos
  */
 function verificarRol($rolesPermitidos) {
     if (!isset($_SESSION['usuario']) || !in_array($_SESSION['usuario']['rol'], $rolesPermitidos)) {

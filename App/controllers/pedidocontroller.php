@@ -29,54 +29,56 @@ switch ($action) {
         include 'app/views/pedido/formulario.php';
         break;
 
-    case 'formEditar':
     case 'verDetalle':
-        header('Content-Type: application/json');
-        try {
-            if (!isset($_GET['id_pedido'])) {
-                throw new Exception('Falta el ID del pedido');
-            }
-            
-            $pedidoData = $pedido->obtenerDetalle($_GET['id_pedido']);
-            
-            if (!$pedidoData) {
-                throw new Exception('Pedido no encontrado');
-            }
-            
-            $productosForm = [];
-            if (isset($pedidoData['detalle']) && is_array($pedidoData['detalle'])) {
-                $productosForm = array_map(function($item) {
+    header('Content-Type: application/json');
+    try {
+        if (!isset($_GET['id_pedido'])) {
+            throw new Exception('Falta el ID del pedido');
+        }
+        
+        $idPedido = $_GET['id_pedido'];
+        $pedidoData = $pedido->obtenerDetalle($idPedido);
+        
+        if (!$pedidoData) {
+            throw new Exception('Pedido no encontrado');
+        }
+        
+        $response = [
+            'success' => true,
+            'data' => [
+                'pedido' => [
+                    'id_pedido' => $pedidoData['pedido']['id_pedido'],
+                    'fecha' => $pedidoData['pedido']['fecha_creacion_formatted'],
+                    'total' => $pedidoData['pedido']['total'],
+                    'estado' => $pedidoData['pedido']['estado']
+                ],
+                'cliente' => [
+                    'ced_cliente' => $pedidoData['cliente']['cedula'],
+                    'nomcliente' => $pedidoData['cliente']['nombre_completo'],
+                    'telefono' => $pedidoData['cliente']['telefono'],
+                    'direccion' => $pedidoData['cliente']['direccion']
+                ],
+                'productos' => array_map(function($item) {
                     return [
-                        'cod_producto' => $item['cod_producto'],
                         'nombre' => $item['nombre_producto'],
-                        'precio' => $item['precio'],
+                        'precio' => $item['precio_unitario'],
                         'cantidad' => $item['cantidad'],
                         'subtotal' => $item['subtotal']
                     ];
-                }, $pedidoData['detalle']);
-            }
-
-            $response = [
-                'success' => true,
-                'data' => [
-                    'id_pedido' => $pedidoData['pedido']['id_pedido'],
-                    'ced_cliente' => $pedidoData['pedido']['ced_cliente'],
-                    'fecha' => $pedidoData['pedido']['fecha'],
-                    'productos' => $productosForm,
-                    'modo_lectura' => ($_GET['action'] === 'verDetalle') // Indicar si es modo solo lectura
-                ]
-            ];
-            
-            echo json_encode($response, JSON_UNESCAPED_UNICODE);
-            
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode([
-                'success' => false, 
-                'message' => 'Error al cargar el pedido: ' . $e->getMessage()
-            ], JSON_UNESCAPED_UNICODE);
-        }
-        break;
+                }, $pedidoData['detalles'])
+            ]
+        ];
+        
+        echo json_encode($response, JSON_UNESCAPED_UNICODE);
+        
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode([
+            'success' => false, 
+            'message' => 'Error al cargar el pedido: ' . $e->getMessage()
+        ]);
+    }
+    break;
 
     case 'guardar':
         header('Content-Type: application/json');
