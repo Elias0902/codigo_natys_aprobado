@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 <?php
 ob_start();
 ?>
