@@ -2,6 +2,12 @@ $(document).ready(function() {
     // Configurar fecha actual
     $('#fecha').val(new Date().toISOString().split('T')[0]);
 
+    // Asignar evento al botón de agregar producto (debe estar al inicio)
+    $(document).on('click', '#btnAgregarProducto', function() {
+        $('#formAgregarProducto')[0].reset();
+        $('#modalAgregarProducto').modal('show');
+    });
+
     // Inicializar DataTable de pedidos pendientes
     const tablaPendientes = $('#tablaPendientes').DataTable({
         language: {
@@ -36,9 +42,6 @@ $(document).ready(function() {
                         <div class="btn-group btn-group-sm" role="group">
                             <button class="btn btn-info btn-sm ver-detalle" data-id="${data.id_pedido}" title="Ver detalle">
                                 <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="btn btn-success btn-sm marcar-pagado" data-id="${data.id_pedido}" title="Marcar como pagado">
-                                <i class="fas fa-check"></i>
                             </button>
                         </div>`;
                 }
@@ -519,4 +522,7 @@ $(document).ready(function() {
         
         $('#total-pedido-form').text(total.toFixed(2));
     }
+
+    // Asignar eventos iniciales
+    asignarEventosFormulario();
 });
