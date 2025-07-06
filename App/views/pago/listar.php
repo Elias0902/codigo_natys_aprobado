@@ -20,7 +20,7 @@ ob_start();
         <div class="d-flex justify-content-between mb-3">
             <h2>Listado de Pagos</h2>
             <button type="button" class="btn btn-success" id="btnNuevoPago" data-bs-toggle="modal" data-bs-target="#modalSeleccionarPedido">
-                <i class="fas fa-plus-circle me-2"></i>Nuevo Pago
+                <i class="fas fa-plus-circle me-2"></i>Registrar Pago
             </button>
             <button type="button" class="btn btn-warning" id="btnToggleEstado">
                 <i class="fas fa-trash-restore me-2"></i>Mostrar Inactivos
@@ -149,31 +149,42 @@ ob_start();
                     <!-- Formulario de pago -->
                     <form id="formPago" class="needs-validation" novalidate>
                         <input type="hidden" name="id_pedido" id="id_pedido">
-                        
-                        <div class="mb-3">
-                            <label for="banco" class="form-label">Banco <span class="text-danger">*</span></label>
-                            <select class="form-select" id="banco" name="banco" required>
-                                <option value="">Seleccione un banco</option>
-                                <option value="Bancaribe">Bancaribe</option>
-                                <option value="Banesco">Banesco</option>
-                                <option value="Mercantil">Mercantil</option>
-                                <option value="Venezuela">Banco de Venezuela</option>
-                                <option value="BOD">BOD</option>
-                                <option value="Otro">Otro</option>
+
+                            <div class="mb-3">
+                            <label for="cod_metodo" class="form-label">Método de Pago <span class="text-danger">*</span></label>
+                            <select class="form-select" id="cod_metodo" name="cod_metodo" required>
+                                <option value="" selected disabled>Seleccione un método de pago</option>
                             </select>
                             <div class="invalid-feedback">
-                                Por favor seleccione un banco.
+                                Por favor seleccione un método de pago.
                             </div>
                         </div>
+                        
+                        <!-- En el formulario de pago, modifica estos campos -->
+<div class="mb-3 banco-field">
+    <label for="banco" class="form-label">Banco <span class="text-danger">*</span></label>
+    <select class="form-select" id="banco" name="banco" required>
+        <option value="">Seleccione un banco</option>
+        <option value="Bancaribe">Bancaribe</option>
+        <option value="Banesco">Banesco</option>
+        <option value="Mercantil">Mercantil</option>
+        <option value="Venezuela">Banco de Venezuela</option>
+        <option value="BOD">BOD</option>
+        <option value="Otro">Otro</option>
+    </select>
+    <div class="invalid-feedback">
+        Por favor seleccione un banco.
+    </div>
+</div>
 
-                        <div class="mb-3">
-                            <label for="referencia" class="form-label">Número de Referencia <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="referencia" name="referencia" required 
-                                   placeholder="Ingrese el número de referencia del pago">
-                            <div class="invalid-feedback">
-                                Por favor ingrese el número de referencia.
-                            </div>
-                        </div>
+<div class="mb-3 referencia-field">
+    <label for="referencia" class="form-label">Número de Referencia <span class="text-danger">*</span></label>
+    <input type="text" class="form-control" id="referencia" name="referencia" required 
+           placeholder="Ingrese el número de referencia del pago">
+    <div class="invalid-feedback">
+        Por favor ingrese el número de referencia.
+    </div>
+</div>
 
                         <div class="mb-3">
                          <label for="monto" class="form-label">Monto Pagado <span class="text-danger">*</span></label>
@@ -187,15 +198,6 @@ ob_start();
                     </div>
                 </div>
 
-                        <div class="mb-3">
-                            <label for="cod_metodo" class="form-label">Método de Pago <span class="text-danger">*</span></label>
-                            <select class="form-select" id="cod_metodo" name="cod_metodo" required>
-                                <option value="" selected disabled>Seleccione un método de pago</option>
-                            </select>
-                            <div class="invalid-feedback">
-                                Por favor seleccione un método de pago.
-                            </div>
-                        </div>
 
                         <div class="mb-3">
                             <label for="fecha_pago" class="form-label">Fecha del Pago <span class="text-danger">*</span></label>

@@ -22,7 +22,7 @@ ob_start();
 
     <div class="d-flex justify-content-between mb-3">
     <button type="button" class="btn btn-success" id="btnNuevoCliente">
-        <i class="fas fa-plus-circle me-2"></i>Nuevo Cliente
+        <i class="fas fa-plus-circle me-2"></i>Registrar Cliente
     </button>
     <button type="button" class="btn btn-warning" id="btnToggleEstado">
     <i class="fas fa-trash-restore me-2"></i>Mostrar Eliminados

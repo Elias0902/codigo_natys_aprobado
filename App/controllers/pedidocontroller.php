@@ -30,7 +30,6 @@ switch ($action) {
         break;
 
     case 'verDetalle':
-case 'formEditar':
     header('Content-Type: application/json');
     try {
         if (!isset($_GET['id_pedido'])) {
@@ -44,16 +43,14 @@ case 'formEditar':
             throw new Exception('Pedido no encontrado');
         }
         
-        // Preparar respuesta estructurada
         $response = [
             'success' => true,
             'data' => [
                 'pedido' => [
                     'id_pedido' => $pedidoData['pedido']['id_pedido'],
                     'fecha' => $pedidoData['pedido']['fecha_creacion_formatted'],
-                    'total' => $pedidoData['pedido']['total_formatted'],
-                    'estado' => $pedidoData['pedido']['estado'],
-                    'estado_texto' => $pedidoData['pedido']['estado_texto']
+                    'total' => $pedidoData['pedido']['total'],
+                    'estado' => $pedidoData['pedido']['estado']
                 ],
                 'cliente' => [
                     'ced_cliente' => $pedidoData['cliente']['cedula'],
@@ -63,7 +60,6 @@ case 'formEditar':
                 ],
                 'productos' => array_map(function($item) {
                     return [
-                        'cod_producto' => $item['cod_producto'],
                         'nombre' => $item['nombre_producto'],
                         'precio' => $item['precio_unitario'],
                         'cantidad' => $item['cantidad'],
@@ -79,9 +75,8 @@ case 'formEditar':
         http_response_code(500);
         echo json_encode([
             'success' => false, 
-            'message' => 'Error al cargar el pedido: ' . $e->getMessage(),
-            'trace' => DEBUG_MODE ? $e->getTraceAsString() : null
-        ], JSON_UNESCAPED_UNICODE);
+            'message' => 'Error al cargar el pedido: ' . $e->getMessage()
+        ]);
     }
     break;
 
@@ -317,4 +312,5 @@ case 'formEditar':
     default:
         include 'app/views/pedido/listar.php';
         break;
+
 }
