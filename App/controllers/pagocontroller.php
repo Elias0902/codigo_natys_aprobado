@@ -44,13 +44,18 @@ switch ($action) {
         try {
             // Validar campos requeridos
             $camposRequeridos = [
-                'banco' => 'Banco',
-                'referencia' => 'Referencia',
                 'fecha_pago' => 'Fecha de pago',
                 'monto' => 'Monto',
                 'cod_metodo' => 'Método de pago',
                 'id_pedido' => 'ID del pedido'
             ];
+            
+            // Solo requerir banco y referencia si no es efectivo o Zelle
+            $metodo = strtoupper(trim($_POST['cod_metodo']));
+            if (!in_array($metodo, ['EFECTIVO', 'ZELLE'])) {
+                $camposRequeridos['banco'] = 'Banco';
+                $camposRequeridos['referencia'] = 'Referencia';
+            }
             
             $errores = [];
             foreach ($camposRequeridos as $campo => $nombre) {
@@ -96,8 +101,8 @@ switch ($action) {
                 
                 // Crear el pago
                 $pago = new Pago();
-                $pago->banco = trim($_POST['banco']);
-                $pago->referencia = trim($_POST['referencia']);
+                $pago->banco = in_array($metodo, ['EFECTIVO', 'ZELLE']) ? 'N/A' : trim($_POST['banco']);
+                $pago->referencia = in_array($metodo, ['EFECTIVO', 'ZELLE']) ? 'N/A' : trim($_POST['referencia']);
                 $pago->fecha = $fecha_pago;
                 $pago->monto = $monto;
                 $pago->cod_metodo = $cod_metodo;

@@ -11,6 +11,23 @@ $(document).ready(function() {
         "escapeHtml": true
     };
 
+    // Función para mostrar/ocultar campos según método de pago
+    function toggleCamposMetodoPago(metodoSeleccionado) {
+        const esEfectivoOZelle = metodoSeleccionado && ['EFECTIVO', 'ZELLE'].includes(metodoSeleccionado.toUpperCase());
+        
+        // Mostrar u ocultar campos
+        $('.banco-field, .referencia-field').toggle(!esEfectivoOZelle);
+        
+        // Hacer los campos opcionales si es efectivo o Zelle
+        $('#banco, #referencia').prop('required', !esEfectivoOZelle);
+        
+        // Limpiar los campos si están ocultos
+        if (esEfectivoOZelle) {
+            $('#banco').val('');
+            $('#referencia').val('');
+        }
+    }
+
     // Inicializar DataTable
     function inicializarDataTable() {
         if ($.fn.DataTable.isDataTable('#pagos')) {
@@ -123,6 +140,11 @@ $(document).ready(function() {
                         const isSelected = metodoSeleccionado && metodoSeleccionado === metodo.codigo;
                         selectElement.append(`<option value="${metodo.codigo}" ${isSelected ? 'selected' : ''}>${metodo.detalle}</option>`);
                     });
+                    
+                    // Manejar el cambio inicial si hay un método seleccionado
+                    if (metodoSeleccionado) {
+                        toggleCamposMetodoPago(metodoSeleccionado);
+                    }
                 } else {
                     toastr.error('No se pudieron cargar los métodos de pago');
                     console.error('Respuesta inesperada:', response);
@@ -164,6 +186,11 @@ $(document).ready(function() {
         });
     });
 
+    // Manejar cambio en método de pago
+    $(document).on('change', '#cod_metodo', function() {
+        toggleCamposMetodoPago($(this).val());
+    });
+
     // Manejar el formulario de pago
     $(document).on('submit', '#formPago', function(e) {
         e.preventDefault();
@@ -177,6 +204,12 @@ $(document).ready(function() {
         if (!$('#cod_metodo').val()) {
             toastr.error('Por favor seleccione un método de pago válido');
             return;
+        }
+        
+        // Si es efectivo o Zelle, no validar banco y referencia
+        const metodo = $('#cod_metodo').val();
+        if (['EFECTIVO', 'ZELLE'].includes(metodo.toUpperCase())) {
+            $('#banco, #referencia').removeClass('is-invalid');
         }
         
         submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Procesando...');
