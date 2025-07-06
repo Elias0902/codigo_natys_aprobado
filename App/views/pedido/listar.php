@@ -247,7 +247,7 @@ ob_start();
                         </div>
                         <div class="mb-3">
                             <label for="precio" class="form-label">Precio Unitario *</label>
-                            <input type="number" class="form-control" id="precio" name="precio" step="0.01" min="0.01" required>
+                            <input type="number" class="form-control" id="precio" name="precio" step="0.01" min="0.01" required readonly>
                         </div>
                         <div class="mb-3">
                             <label for="subtotal" class="form-label">Subtotal</label>

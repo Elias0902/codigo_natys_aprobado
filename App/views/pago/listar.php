@@ -176,16 +176,16 @@ ob_start();
                         </div>
 
                         <div class="mb-3">
-                            <label for="monto" class="form-label">Monto Pagado <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <span class="input-group-text">$</span>
-                                <input type="number" class="form-control" id="monto" name="monto" 
-                                       step="0.01" min="0.01" required>
-                                <div class="invalid-feedback">
-                                    Por favor ingrese el monto pagado.
-                                </div>
-                            </div>
+                         <label for="monto" class="form-label">Monto Pagado <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                        <span class="input-group-text">$</span>
+                        <input type="number" class="form-control" id="monto" name="monto" 
+                             step="0.01" min="0.01" required readonly>
+                    <div class="invalid-feedback">
+                     Por favor ingrese el monto pagado.
                         </div>
+                    </div>
+                </div>
 
                         <div class="mb-3">
                             <label for="cod_metodo" class="form-label">Método de Pago <span class="text-danger">*</span></label>

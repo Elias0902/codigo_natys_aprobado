@@ -190,7 +190,11 @@ $(document).ready(function() {
         .done(function(response) {
             if (response.success) {
                 toastr.success(response.message);
+                
+                // Cerrar el modal y forzar la eliminación del backdrop
                 $('#modalNuevoPago').modal('hide');
+                $('body').removeClass('modal-open');
+                $('.modal-backdrop').remove();
                 
                 // Limpiar el formulario
                 form.reset();
@@ -198,6 +202,11 @@ $(document).ready(function() {
                 
                 // Recargar la tabla
                 recargarTabla();
+                
+                // Redirigir a la lista de pagos para asegurar que no quede ningún modal abierto
+                setTimeout(function() {
+                    window.location.href = 'index.php?url=pago';
+                }, 1000);
             } else {
                 toastr.error(response.message || 'Error al procesar el pago');
             }
