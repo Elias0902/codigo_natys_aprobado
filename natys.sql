@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 16-11-2025 a las 01:16:32
+-- Tiempo de generación: 24-11-2025 a las 18:08:35
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.0.30
 
@@ -227,7 +227,7 @@ CREATE TABLE `usuario` (
 --
 
 INSERT INTO `usuario` (`id`, `correo_usuario`, `usuario`, `clave`, `rol`, `estado`, `imagen_perfil`, `imagen_perfil_blob`) VALUES
-(1, 'admin@natys.com', 'admin', '$2y$10$sMTnRP8GD4.QQRqgkNG9oeTR929cE5jCCBzxbOzSzAJ8YQXsJtWkS', 'admin', 1, '/Natys/Assets/img/usuarios/image_77d80071129effa74d038240a71284f7.png', NULL),
+(1, 'eliasarmas0902@gmail.com', 'admin', '$2y$10$dvrb/rpGZQ.QkDhfRCooXuUoGukjWOkc6lcd1xWs0D0PIeQqx7muS', 'superadmin', 1, '/Natys/Assets/img/usuarios/image_77d80071129effa74d038240a71284f7.png', NULL),
 (2, 'vendedor@natys.com', 'vendedor', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'vendedor', 1, '/Natys/Assets/img/avatar.png', NULL);
 
 --
