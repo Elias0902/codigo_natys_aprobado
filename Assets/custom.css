@@ -1,0 +1,10 @@
+.modal-lg {
+  max-width: 90vw;
+}
+.table-responsive {
+  overflow-x: auto;
+}
+th, td {
+  word-break: break-word;
+  max-width: 300px;
+}

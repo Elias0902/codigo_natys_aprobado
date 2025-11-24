@@ -13,8 +13,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <style>
         :root {
-            --primary-color: rgb(243, 60, 60);
-            --secondary-color: rgb(243, 60, 60);
+            --primary-color: #cc1d1d;
+            --secondary-color: #cc1d1d;
             --bg-color: #121212;
             --card-bg: #1e1e1e;
             --text-color: #f8f9fa;
@@ -23,7 +23,6 @@
             --link-color: #ffffff;
         }
         
-        /* Estilos para el modo claro */
         [data-theme="light"] {
             --bg-color: #f5f7fb;
             --card-bg: #ffffff;
@@ -65,8 +64,6 @@
         }
         
         .form-control:focus {
-            background-color: var(--input-bg);
-            color: var(--input-text);
             border-color: var(--primary-color);
             box-shadow: 0 0 0 0.25rem rgba(204, 29, 29, 0.25);
         }
@@ -78,6 +75,8 @@
             border-radius: 8px;
             font-weight: 500;
             width: 100%;
+            background-color: #cc1d1d !important;
+            border-color: #cc1d1d !important;
         }
         
         .btn-primary:hover {
@@ -87,12 +86,6 @@
         .auth-logo {
             text-align: center;
             margin-bottom: 2rem;
-        }
-        
-        .input-group-text {
-            background-color: var(--input-bg);
-            border: 1px solid #ced4da;
-            color: var(--input-text);
         }
         
         .auth-logo img {
@@ -110,6 +103,31 @@
             transform: translateY(-50%);
             cursor: pointer;
             color: #6c757d;
+        }
+
+        .code-inputs {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            gap: 0.5rem;
+        }
+
+        .code-inputs input {
+            width: 15%;
+            height: 50px;
+            text-align: center;
+            font-size: 1.5rem;
+            flex-grow: 1;
+        }
+
+        .input-group-text {
+            background-color: var(--input-bg);
+            color: var(--input-text);
+        }
+
+        #timer {
+            color: var(--primary-color);
+            font-weight: bold;
         }
     </style>
 </head>
@@ -132,12 +150,13 @@
                         <h4 class="mb-0"><i class="fas fa-key me-2"></i>Recuperar Contraseña</h4>
                     </div>
                     <div class="card-body p-4">
-                        <form id="formRecuperar" method="POST" action="index.php?url=login&action=solicitarRecuperacion">
+                        <!-- Paso 1: Solicitar recuperación -->
+                        <form id="formRecuperar" method="POST" action="index.php?url=user&type=login&action=solicitarRecuperacion">
                             <div class="mb-3">
-                                <p style="color: var(--text-color)">Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.</p>
+                                <p style="color: var(--text-color)">Ingresa tu correo electrónico y te enviaremos un código de verificación.</p>
                             </div>
                             <div class="mb-3">
-                                <label for="correo" class="form-label">Correo Electrónico</label>
+                                <label for="correo" class="form-label"style="color: var(--text-color)">Correo Electrónico</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-envelope"></i></span>
                                     <input type="email" class="form-control" id="correo" name="correo" placeholder="tucorreo@ejemplo.com" required>
@@ -145,12 +164,72 @@
                             </div>
                             <div class="d-grid gap-2 mb-3">
                                 <button type="submit" class="btn btn-primary">
-                                    <span class="submit-text">Enviar Enlace</span>
+                                    <span class="submit-text">Enviar Código</span>
                                     <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
                                 </button>
                             </div>
                             <div class="text-center">
-                                <a href="index.php?url=login" class="text-decoration-none"><i class="fas fa-arrow-left me-1"></i> Volver al login</a>
+                                <a href="index.php?url=user&type=login" class="text-decoration-none" style="color: black !important;"><i class="fas fa-arrow-left me-1"></i> Volver al Login</a>
+                            </div>
+                        </form>
+
+                        <!-- Paso 2: Verificar código -->
+                        <form id="formVerificarCodigo" method="POST" action="index.php?url=user&type=login&action=verificarCodigo" style="display: none;">
+                            <div class="mb-3">
+                                <p style="color: var(--text-color)">Hemos enviado un código de 6 dígitos a tu correo electrónico. Por favor ingrésalo a continuación:</p>
+                            </div>
+                            <div class="code-inputs">
+                                <input type="text" class="form-control text-center" name="code1" maxlength="1" required autofocus pattern="[A-Za-z0-9]">
+                                <input type="text" class="form-control text-center" name="code2" maxlength="1" required pattern="[A-Za-z0-9]">
+                                <input type="text" class="form-control text-center" name="code3" maxlength="1" required pattern="[A-Za-z0-9]">
+                                <input type="text" class="form-control text-center" name="code4" maxlength="1" required pattern="[A-Za-z0-9]">
+                                <input type="text" class="form-control text-center" name="code5" maxlength="1" required pattern="[A-Za-z0-9]">
+                                <input type="text" class="form-control text-center" name="code6" maxlength="1" required pattern="[A-Za-z0-9]">
+                            </div>
+                            <input type="hidden" name="correo" id="correo-verificacion">
+                            <div class="d-grid gap-2 mb-3">
+                                <button type="submit" class="btn btn-primary">
+                                    <span class="submit-text">Verificar Código</span>
+                                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                </button>
+                            </div>
+                            <div class="text-center">
+                                <a href="#" id="reenviarCodigo" class="text-decoration-none"><i class="fas fa-sync-alt me-1"></i> Reenviar código</a>
+                                <span id="timer" class="d-block mt-2"></span>
+                            </div>
+                            <div class="text-center">
+                                <a href="index.php?url=user&type=login" class="text-decoration-none" style="color:  #6c757d !important;"><i class="fas fa-arrow-left me-1"></i> Volver al Login</a>
+                            </div>
+                        </form>
+
+                        <!-- Paso 3: Cambiar contraseña -->
+                        <form id="formCambiarClave" method="POST" action="index.php?url=user&type=login&action=cambiarClave" style="display: none;">
+                            <div class="mb-3">
+                                <label for="clave" class="form-label"style="color: var(--text-color)">Nueva Contraseña</label>
+                                <div class="input-group password-toggle">
+                                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                    <input type="password" class="form-control" id="clave" name="clave" required minlength="8">
+                                    <span class="password-toggle-icon"><i class="fas fa-eye"></i></span>
+                                </div>
+                                <div class="form-text"style="color: var(--text-color)">Mínimo 8 caracteres</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="confirmar_clave" class="form-label"style="color: var(--text-color)">Confirmar Contraseña</label>
+                                <div class="input-group password-toggle">
+                                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                    <input type="password" class="form-control" id="confirmar_clave" name="confirmar_clave" required minlength="8">
+                                    <span class="password-toggle-icon"><i class="fas fa-eye"></i></span>
+                                </div>
+                            </div>
+                            <input type="hidden" name="correo" id="correo-cambio">
+                            <div class="d-grid gap-2 mb-3">
+                                <button type="submit" class="btn btn-primary">
+                                    <span class="submit-text">Cambiar Contraseña</span>
+                                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                </button>
+                                <div class="text-center">
+                                <a href="index.php?url=user&type=login" class="text-decoration-none" style="color: white !important;"><i class="fas fa-arrow-left me-1"></i> Volver al Login</a>
+                            </div>
                             </div>
                         </form>
                     </div>
@@ -195,7 +274,6 @@
         $('#formRecuperar').submit(function(e) {
             e.preventDefault();
             
-            // Mostrar spinner
             const submitBtn = $(this).find('button[type="submit"]');
             const submitText = submitBtn.find('.submit-text');
             const spinner = submitBtn.find('.spinner-border');
@@ -213,51 +291,13 @@
                     if (response.success) {
                         toastr.success(response.message);
                         
-                        // Reemplazar el formulario con campos para nueva contraseña
-                        $('#formRecuperar').html(`
-                            <div class="mb-3">
-                                <label for="clave" class="form-label">Nueva Contraseña</label>
-                                <div class="input-group password-toggle">
-                                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                                    <input type="password" class="form-control" id="clave" name="clave" required>
-                                    <span class="password-toggle-icon"><i class="fas fa-eye"></i></span>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label for="confirmar_clave" class="form-label">Confirmar Contraseña</label>
-                                <div class="input-group password-toggle">
-                                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                                    <input type="password" class="form-control" id="confirmar_clave" name="confirmar_clave" required>
-                                    <span class="password-toggle-icon"><i class="fas fa-eye"></i></span>
-                                </div>
-                            </div>
-                            <input type="hidden" name="correo" value="${$('#correo').val()}">
-                            <div class="d-grid gap-2 mb-3">
-                                <button type="submit" class="btn btn-primary">
-                                    <span class="submit-text">Cambiar Contraseña</span>
-                                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-                                </button>
-                                <div class="text-center">
-                                <a href="index.php?url=login" class="text-decoration-none"><i class="fas fa-arrow-left me-1"></i> Volver al login</a>
-                            </div>
-                            </div>
-                        `);
+                        $('#correo-verificacion').val($('#correo').val());
+                        $('#formRecuperar').hide();
+                        $('#formVerificarCodigo').show();
+                        $('input[name="code1"]').focus();
                         
-                        $('#formRecuperar').attr('action', 'index.php?url=login&action=cambiarClave');
-                        
-                        // Configurar el toggle de visibilidad para los nuevos campos
-                        $('.password-toggle-icon').click(function() {
-                            const input = $(this).siblings('input');
-                            const icon = $(this).find('i');
-                            
-                            if (input.attr('type') === 'password') {
-                                input.attr('type', 'text');
-                                icon.removeClass('fa-eye').addClass('fa-eye-slash');
-                            } else {
-                                input.attr('type', 'password');
-                                icon.removeClass('fa-eye-slash').addClass('fa-eye');
-                            }
-                        });
+                        // Iniciar temporizador de 15 minutos
+                        startTimer(15 * 60, $('#timer'));
                     } else {
                         toastr.error(response.message);
                     }
@@ -267,15 +307,148 @@
                     console.error(error);
                 },
                 complete: function() {
-                    // Restaurar el botón
                     submitText.removeClass('d-none');
                     spinner.addClass('d-none');
                     submitBtn.prop('disabled', false);
                 }
             });
         });
-        
-        // Alternar visibilidad de contraseña (para cuando se cargue el segundo formulario)
+
+        // Manejar verificación de código
+        $('#formVerificarCodigo').submit(function(e) {
+            e.preventDefault();
+            
+            const submitBtn = $(this).find('button[type="submit"]');
+            const submitText = submitBtn.find('.submit-text');
+            const spinner = submitBtn.find('.spinner-border');
+            
+            submitText.addClass('d-none');
+            spinner.removeClass('d-none');
+            submitBtn.prop('disabled', true);
+            
+            const codigo = $('input[name="code1"]').val() + 
+                          $('input[name="code2"]').val() + 
+                          $('input[name="code3"]').val() + 
+                          $('input[name="code4"]').val() + 
+                          $('input[name="code5"]').val() + 
+                          $('input[name="code6"]').val();
+            
+            $.ajax({
+                url: $(this).attr('action'),
+                type: 'POST',
+                data: {
+                    correo: $('#correo-verificacion').val(),
+                    codigo: codigo
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        toastr.success(response.message);
+                        $('#correo-cambio').val($('#correo-verificacion').val());
+                        $('#formVerificarCodigo').hide();
+                        $('#formCambiarClave').show();
+                    } else {
+                        toastr.error(response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    toastr.error('Error en la solicitud');
+                    console.error(error);
+                },
+                complete: function() {
+                    submitText.removeClass('d-none');
+                    spinner.addClass('d-none');
+                    submitBtn.prop('disabled', false);
+                }
+            });
+        });
+
+        // Reenviar código
+        $('#reenviarCodigo').click(function(e) {
+            e.preventDefault();
+            
+            toastr.info('Enviando nuevo código...');
+            
+            $.ajax({
+                url: 'index.php?url=user&type=login&action=reenviarCodigo',
+                type: 'POST',
+                data: {
+                    correo: $('#correo-verificacion').val()
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        toastr.success(response.message);
+                        startTimer(15 * 60, $('#timer'));
+                    } else {
+                        toastr.error(response.message);
+                    }
+                },
+                error: function() {
+                    toastr.error('Error al reenviar el código');
+                }
+            });
+        });
+
+        // Manejar cambio de contraseña
+        $('#formCambiarClave').submit(function(e) {
+            e.preventDefault();
+            
+            const submitBtn = $(this).find('button[type="submit"]');
+            const submitText = submitBtn.find('.submit-text');
+            const spinner = submitBtn.find('.spinner-border');
+            
+            submitText.addClass('d-none');
+            spinner.removeClass('d-none');
+            submitBtn.prop('disabled', true);
+            
+            $.ajax({
+                url: $(this).attr('action'),
+                type: 'POST',
+                data: $(this).serialize(),
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        toastr.success(response.message);
+                        // Redirigir después de 2 segundos
+                        setTimeout(function() {
+                            window.location.href = response.redirect || 'index.php?url=user&type=login';
+                        }, 2000);
+                    } else {
+                        toastr.error(response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    toastr.error('Error en la solicitud');
+                    console.error(error);
+                },
+                complete: function() {
+                    submitText.removeClass('d-none');
+                    spinner.addClass('d-none');
+                    submitBtn.prop('disabled', false);
+                }
+            });
+        });
+
+        // Navegación entre campos del código
+        $('.code-inputs input').on('input', function() {
+            if ($(this).val().length === 1) {
+                $(this).next('input').focus();
+            }
+        });
+
+        // Validar solo caracteres alfanuméricos en los códigos
+        $('.code-inputs input').on('keypress', function(e) {
+            const charCode = e.which ? e.which : e.keyCode;
+            if ((charCode < 48 || charCode > 57) && // 0-9
+                (charCode < 65 || charCode > 90) && // A-Z
+                (charCode < 97 || charCode > 122)) { // a-z
+                return false;
+            }
+            return true;
+        });
+
+        // Alternar visibilidad de contraseña
         $(document).on('click', '.password-toggle-icon', function() {
             const input = $(this).siblings('input');
             const icon = $(this).find('i');
@@ -288,6 +461,25 @@
                 icon.removeClass('fa-eye-slash').addClass('fa-eye');
             }
         });
+
+        // Temporizador para el código
+        function startTimer(duration, display) {
+            let timer = duration, minutes, seconds;
+            const interval = setInterval(function() {
+                minutes = parseInt(timer / 60, 10);
+                seconds = parseInt(timer % 60, 10);
+
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                display.text("El código expira en: " + minutes + ":" + seconds);
+
+                if (--timer < 0) {
+                    clearInterval(interval);
+                    display.text("El código ha expirado");
+                }
+            }, 1000);
+        }
     });
     </script>
 </body>

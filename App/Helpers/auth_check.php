@@ -25,17 +25,18 @@ if (isset($_SESSION['usuario'])) {
         session_unset();
         session_destroy();
         if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+            http_response_code(401);
             header('Content-Type: application/json');
             echo json_encode([
-                'success' => false, 
-                'message' => 'Sesión expirada por inactividad', 
-                'redirect' => 'index.php?url=login&Reason=Expulsion-Por-inactividad',
+                'success' => false,
+                'message' => 'Sesión expirada por inactividad',
+                'redirect' => 'index.php?url=user&type=login&Reason=Expulsion-Por-inactividad',
                 'timeout' => true
             ]);
             exit;
         } else {
             $_SESSION['error_login'] = 'Tu sesión ha expirado por inactividad';
-            header('Location: index.php?url=login&Reason=Expulsion-Por-inactividad');
+            header('Location: index.php?url=user&type=login&Reason=Expulsion-Por-inactividad');
             exit;
         }
     }
@@ -49,20 +50,17 @@ if (!isset($_SESSION['usuario'])) {
         echo json_encode([
             'success' => false, 
             'message' => 'Acceso no autorizado', 
-            'redirect' => 'index.php?url=login'
+            'redirect' => 'index.php?url=user&type=login'
         ]);
         exit;
     } else {
         $_SESSION['error_login'] = 'Debes iniciar sesión para acceder a esta página';
-        header('Location: index.php?url=login');
+        header('Location: index.php?url=user&type=login');
         exit;
     }
 }
 
-/**
- 
- * @param array $rolesPermitidos
- */
+
 function verificarRol($rolesPermitidos) {
     if (!isset($_SESSION['usuario']) || !in_array($_SESSION['usuario']['rol'], $rolesPermitidos)) {
         if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {

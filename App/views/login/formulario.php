@@ -159,28 +159,28 @@
                         <h4 class="mb-0"><i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión</h4>
                     </div>
                     <div class="card-body p-4">
-                        <form id="formLogin" method="POST" action="index.php?url=login&action=autenticar">
+                        <form id="formLogin" method="POST" action="index.php?url=user&type=login&action=autenticar">
                             <div class="mb-3">
-                                <label for="usuario" class="form-label">Usuario</label>
+                                <label for="usuario" class="form-label"style="color: var(--text-color)">Usuario</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-user"></i></span>
-                                    <input type="text" class="form-control" id="usuario" name="usuario" placeholder="Ingresa tu usuario" required>
+                                    <input type="text" class="form-control" id="usuario" name="usuario" placeholder="Ingresa tu usuario" maxlength="30" required>
                                 </div>
                             </div>
                             <div class="mb-3">
-                                <label for="clave" class="form-label">Contraseña</label>
+                                <label for="clave" class="form-label"style="color: var(--text-color)">Contraseña</label>
                                 <div class="input-group password-toggle">
                                     <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                                    <input type="password" class="form-control" id="clave" name="clave" placeholder="Ingresa tu contraseña" required>
+                                    <input type="password" class="form-control" id="clave" name="clave" placeholder="Ingresa tu contraseña" maxlength="30" required>
                                     <span class="password-toggle-icon"><i class="fas fa-eye"></i></span>
                                 </div>
                             </div>
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="rememberMe">
-                                    <label class="form-check-label" for="rememberMe">Recordarme</label>
+                                    <label class="form-check-label" for="rememberMe">Recordar</label>
                                 </div>
-                                <a href="index.php?url=login&action=mostrarRecuperar" class="text-decoration-none">¿Olvidaste tu contraseña?</a>
+                                <a href="index.php?url=user&type=login&action=mostrarRecuperar" class="text-decoration-none">¿Olvidaste tu contraseña?</a>
                             </div>
                             <div class="d-grid gap-2 mb-3">
                                 <button type="submit" class="btn btn-primary">
@@ -247,164 +247,176 @@
         setTheme(currentTheme === 'light' ? 'dark' : 'light');
     });
     
-    $(document).ready(function() {
-        // Mostrar mensaje de error si existe
-        <?php if (isset($_SESSION['error_login'])): ?>
-            toastr.error('<?php echo $_SESSION['error_login']; ?>');
-            <?php unset($_SESSION['error_login']); ?>
-        <?php endif; ?>
+    // Validación del formulario de login
+    $('#formLogin').on('submit', function(e) {
+        var usuario = $('#usuario').val();
+        var clave = $('#clave').val();
         
-        // Alternar visibilidad de contraseña
-        $('.password-toggle-icon').click(function() {
-            const input = $(this).siblings('input');
-            const icon = $(this).find('i');
-            
-            if (input.attr('type') === 'password') {
-                input.attr('type', 'text');
-                icon.removeClass('fa-eye').addClass('fa-eye-slash');
-            } else {
-                input.attr('type', 'password');
-                icon.removeClass('fa-eye-slash').addClass('fa-eye');
-            }
-        });
-        
-        // Manejar el envío del formulario
-        $('#formLogin').submit(function(e) {
+        if (usuario.length > 15) {
             e.preventDefault();
-            
-            // Mostrar spinner
-            const submitBtn = $(this).find('button[type="submit"]');
-            const submitText = submitBtn.find('.submit-text');
-            const spinner = submitBtn.find('.spinner-border');
-            
-            submitText.addClass('d-none');
-            spinner.removeClass('d-none');
-            submitBtn.prop('disabled', true);
-            
-            $.ajax({
-                url: $(this).attr('action'),
-                type: 'POST',
-                data: $(this).serialize(),
-                dataType: 'json',
-                success: function(response) {
-                    if (response.success) {
-                        toastr.success('Autenticación exitosa, redirigiendo...');
-                        setTimeout(function() {
-                            window.location.href = response.redirect;
-                        }, 1500);
-                    } else {
-                        toastr.error(response.message);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    toastr.error('Error en la solicitud: ' + error);
-                    console.error('Error:', error, xhr.responseText);
-                },
-                complete: function() {
-                    // Restaurar el botón
-                    submitText.removeClass('d-none');
-                    spinner.addClass('d-none');
-                    submitBtn.prop('disabled', false);
-                }
-            });
-        });
+            toastr.error('El usuario no puede tener más de 15 caracteres');
+            return false;
+        }
+        
+        if (clave.length > 30) {
+            e.preventDefault();
+            toastr.error('La contraseña no puede tener más de 30 caracteres');
+            return false;
+        }
+        return true;
+    });
+    
+    $(document).ready(function() {
+    const savedUser = localStorage.getItem('rememberedUser');
+    
+    if (savedUser) {
+        $('#usuario').val(savedUser);
+        $('#rememberMe').prop('checked', true);
+    }
+    
+    $('#formLogin').submit(function() {
+        if ($('#rememberMe').is(':checked')) {
+            localStorage.setItem('rememberedUser', $('#usuario').val());
+        } else {
+            localStorage.removeItem('rememberedUser');
+        }
+        localStorage.removeItem('rememberedPass');
+    });
 
-        // =============================================
-        // Sistema de Timeout por Inactividad
-        // =============================================
-        const inactiveTimeout = 300000; // 5 minutos en milisegundos
-        const warningTimeout = 240000; // 4 minutos en milisegundos (muestra advertencia 1 minuto antes)
+    <?php if (isset($_SESSION['error_login'])): ?>
+        toastr.error('<?php echo $_SESSION['error_login']; ?>');
+        <?php unset($_SESSION['error_login']); ?>
+    <?php endif; ?>
+    
+    $('.password-toggle-icon').click(function() {
+        const input = $(this).siblings('input');
+        const icon = $(this).find('i');
         
-        let inactivityTimer;
-        let warningTimer;
-        let countdownInterval;
-        const timeoutModal = new bootstrap.Modal(document.getElementById('timeoutModal'));
-        
-        // Función para reiniciar los timers
-        function resetInactivityTimers() {
-            // Limpiar timers existentes
-            clearTimeout(inactivityTimer);
-            clearTimeout(warningTimer);
-            clearInterval(countdownInterval);
-            
-            // Ocultar modal si está visible
-            timeoutModal.hide();
-            
-            // Configurar nuevo timer de advertencia
-            warningTimer = setTimeout(showTimeoutWarning, warningTimeout);
-            
-            // Configurar nuevo timer de logout
-            inactivityTimer = setTimeout(logoutDueToInactivity, inactiveTimeout);
+        if (input.attr('type') === 'password') {
+            input.attr('type', 'text');
+            icon.removeClass('fa-eye').addClass('fa-eye-slash');
+        } else {
+            input.attr('type', 'password');
+            icon.removeClass('fa-eye-slash').addClass('fa-eye');
         }
+    });
+    
+    $('#formLogin').submit(function(e) {
+        e.preventDefault();
         
-        // Mostrar advertencia de timeout
-        function showTimeoutWarning() {
-            // Mostrar modal
-            timeoutModal.show();
-            
-            // Configurar cuenta regresiva
-            let secondsLeft = 60;
-            $('#countdown').text(secondsLeft);
-            
-            countdownInterval = setInterval(function() {
-                secondsLeft--;
-                $('#countdown').text(secondsLeft);
-                
-                if (secondsLeft <= 0) {
-                    clearInterval(countdownInterval);
+        const submitBtn = $(this).find('button[type="submit"]');
+        const submitText = submitBtn.find('.submit-text');
+        const spinner = submitBtn.find('.spinner-border');
+        
+        submitText.addClass('d-none');
+        spinner.removeClass('d-none');
+        submitBtn.prop('disabled', true);
+        
+        $.ajax({
+            url: $(this).attr('action'),
+            type: 'POST',
+            data: $(this).serialize(),
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    toastr.success('Autenticación exitosa, redirigiendo...');
+                    setTimeout(function() {
+                        window.location.href = response.redirect;
+                    }, 1500);
+                } else {
+                    toastr.error(response.message);
                 }
-            }, 1000);
-        }
-        
-        // Cerrar sesión por inactividad
-        function logoutDueToInactivity() {
-            clearInterval(countdownInterval);
-            timeoutModal.hide();
-            
-            toastr.error('Tu sesión ha expirado por inactividad', 'Sesión cerrada', {
-                timeOut: 5000,
-                onHidden: function() {
-                    window.location.href = 'index.php?url=login';
-                }
-            });
-        }
-        
-        // Eventos que reinician el contador de inactividad
-        $(document).on('mousemove keydown click scroll', function() {
-            resetInactivityTimers();
-        });
-        
-        // Botón para continuar sesión
-        $('#stayLoggedIn').click(function() {
-            resetInactivityTimers();
-            timeoutModal.hide();
-        });
-        
-        // Iniciar timers al cargar la página
-        resetInactivityTimers();
-        
-        // Manejar respuesta AJAX para warnings de timeout del servidor
-        $(document).ajaxSuccess(function(event, xhr, settings) {
-            try {
-                const response = JSON.parse(xhr.responseText);
-                if (response.timeout_warning) {
-                    toastr.warning(response.message, 'Advertencia', {
-                        timeOut: response.remaining * 1000,
-                        closeButton: true
-                    });
-                } else if (response.timeout) {
-                    toastr.error(response.message, 'Sesión expirada', {
-                        timeOut: 5000,
-                        onHidden: function() {
-                            window.location.href = response.redirect;
-                        }
-                    });
-                }
-            } catch (e) {
-                // No es una respuesta JSON o no es relevante
+            },
+            error: function(xhr, status, error) {
+                toastr.error('Error en la solicitud: ' + error);
+                console.error('Error:', error, xhr.responseText);
+            },
+            complete: function() {
+                submitText.removeClass('d-none');
+                spinner.addClass('d-none');
+                submitBtn.prop('disabled', false);
             }
         });
     });
+
+    const inactiveTimeout = 300000;
+    const warningTimeout = 240000;
+    
+    let inactivityTimer;
+    let warningTimer;
+    let countdownInterval;
+    const timeoutModal = new bootstrap.Modal(document.getElementById('timeoutModal'));
+    
+    function resetInactivityTimers() {
+        clearTimeout(inactivityTimer);
+        clearTimeout(warningTimer);
+        clearInterval(countdownInterval);
+        
+        timeoutModal.hide();
+        
+        warningTimer = setTimeout(showTimeoutWarning, warningTimeout);
+        inactivityTimer = setTimeout(logoutDueToInactivity, inactiveTimeout);
+    }
+    
+    function showTimeoutWarning() {
+        timeoutModal.show();
+        
+        let secondsLeft = 60;
+        $('#countdown').text(secondsLeft);
+        
+        countdownInterval = setInterval(function() {
+            secondsLeft--;
+            $('#countdown').text(secondsLeft);
+            
+            if (secondsLeft <= 0) {
+                clearInterval(countdownInterval);
+            }
+        }, 1000);
+    }
+    
+    function logoutDueToInactivity() {
+        clearInterval(countdownInterval);
+        timeoutModal.hide();
+        
+        toastr.error('Tu sesión ha expirado por inactividad', 'Sesión cerrada', {
+            timeOut: 5000,
+            onHidden: function() {
+                window.location.href = 'index.php?url=user&type=login';
+            }
+        });
+    }
+    
+    $(document).on('mousemove keydown click scroll', function() {
+        resetInactivityTimers();
+    });
+    
+    $('#stayLoggedIn').click(function() {
+        resetInactivityTimers();
+        timeoutModal.hide();
+    });
+    
+    resetInactivityTimers();
+    
+    $(document).ajaxSuccess(function(event, xhr, settings) {
+        try {
+            const response = JSON.parse(xhr.responseText);
+            if (response.timeout_warning) {
+                toastr.warning(response.message, 'Advertencia', {
+                    timeOut: response.remaining * 1000,
+                    closeButton: true
+                });
+            } else if (response.timeout) {
+                toastr.error(response.message, 'Sesión expirada', {
+                    timeOut: 5000,
+                    onHidden: function() {
+                        window.location.href = response.redirect;
+                    }
+                });
+            }
+        } catch (e) {
+        }
+    });
+});
     </script>
 </body>
 </html>

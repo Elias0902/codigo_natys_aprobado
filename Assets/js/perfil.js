@@ -36,14 +36,26 @@ $(document).ready(function() {
                 { data: 'nombre_usuario' },
                 { data: 'correo_usuario' },
                 { data: 'usuario' },
-                { data: 'rol' },
+                { 
+                    data: 'rol',
+                    render: function(data, type, row) {
+                        let badgeClass = 'bg-primary'; // Admin por defecto
+                        if (data === 'superadmin') badgeClass = 'bg-info';
+                        if (data === 'vendedor') badgeClass = 'bg-success';
+                        
+                        return `<span class="badge rounded-pill ${badgeClass}">${data}</span>`;
+                    }
+                },
                 {
                     data: 'id',
                     render: function(data, type, row) {
                         return `
                             <div class="btn-group" role="group">
-                                <button class="btn btn-sm btn-primary editar" data-id="${data}">
-                                    <i class="fas fa-edit"></i> Editar
+                                <button class="btn btn-sm btn-primary actualizar" data-id="${data}">
+                                    <i class="fas fa-sync-alt"></i> Editar
+                                </button>
+                                <button class="btn btn-sm btn-danger eliminar" data-id="${data}">
+                                    <i class="fas fa-trash"></i> Eliminar
                                 </button>
                             </div>
                         `;
@@ -127,6 +139,71 @@ $(document).ready(function() {
             });
         });
     };
+
+    // Manejar clic en botón registrar
+    $(document).on('click', '#btnRegistrarUsuario', function() {
+        $('#modalRegistrar').modal('show');
+    });
+
+    // Manejar envío del formulario de registro
+    $(document).on('submit', '#formRegistrar', function(e) {
+        e.preventDefault();
+        
+        const form = this;
+        if (!form.checkValidity()) {
+            e.stopPropagation();
+            form.classList.add('was-validated');
+            return;
+        }
+        
+        $.ajax({
+            url: 'index.php?url=perfil&action=registrar',
+            type: 'POST',
+            data: $(form).serialize(),
+            dataType: 'json'
+        })
+        .done(response => {
+            if(response.success) {
+                $('#modalRegistrar').modal('hide');
+                form.reset();
+                form.classList.remove('was-validated');
+                toastr.success(response.message);
+                recargarTabla();
+            } else {
+                toastr.error(response.message);
+            }
+        })
+        .fail((xhr, status, error) => {
+            console.error('Error en la petición:', error, xhr.responseText);
+            toastr.error(`Error en la solicitud: ${error}`);
+        });
+    });
+
+    // Manejar clic en botón eliminar
+    $(document).on('click', '.eliminar', function(e) {
+        e.preventDefault();
+        const id = $(this).data('id');
+        
+        if (confirm('¿Está seguro que desea eliminar este usuario?')) {
+            $.ajax({
+                url: `index.php?url=perfil&action=eliminar&id=${id}`,
+                type: 'GET',
+                dataType: 'json'
+            })
+            .done(response => {
+                if(response.success) {
+                    toastr.success(response.message);
+                    recargarTabla();
+                } else {
+                    toastr.error(response.message);
+                }
+            })
+            .fail((xhr, status, error) => {
+                console.error('Error en la petición:', error, xhr.responseText);
+                toastr.error(`Error en la solicitud: ${error}`);
+            });
+        }
+    });
 
     manejarFormulario();
 

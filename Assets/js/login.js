@@ -37,11 +37,11 @@ class SessionManager {
         
         this.modal.innerHTML = `
             <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 0 20px rgba(0,0,0,0.2);">
-                <h3 style="margin-top: 0; color: #dc3545;">¡Sesión por expirar!</h3>
+                <h3 style="margin-top: 0; color: #d31111;">¡Sesión por expirar!</h3>
                 <p>Tu sesión se cerrará en <span id="countdown">5</span> segundos por inactividad.</p>
                 <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem;">
                     <button id="continue-session" style="padding: 0.5rem 1.5rem; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Continuar</button>
-                    <button id="logout-now" style="padding: 0.5rem 1.5rem; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">Salir</button>
+                    <button id="logout-now" style="padding: 0.5rem 1.5rem; background: #d31111; color: white; border: none; border-radius: 4px; cursor: pointer;">Salir</button>
                 </div>
             </div>
         `;
@@ -74,7 +74,7 @@ class SessionManager {
     }
     
     logout() {
-        window.location.href = 'index.php?url=login&action=cerrarSesion&reason=timeout';
+        window.location.href = 'index.php?url=user&type=login&action=cerrarSesion&reason=timeout';
     }
     
     resetTimers() {
@@ -89,7 +89,7 @@ class SessionManager {
     }
     
     sendHeartbeat() {
-        fetch('index.php?url=login&action=heartbeat', {
+        fetch('index.php?url=user&type=login&action=heartbeat', {
             method: 'POST',
             credentials: 'same-origin'
         }).catch(console.error);
@@ -109,13 +109,13 @@ class SessionManager {
     }
     
     checkSession() {
-        fetch('index.php?url=login&action=check_session', {
+        fetch('index.php?url=user&type=login&action=check_session', {
             credentials: 'same-origin'
         })
         .then(response => response.json())
         .then(data => {
             if (!data.active) {
-                window.location.href = 'index.php?url=login';
+                window.location.href = 'index.php?url=user&type=login';
             }
         })
         .catch(console.error);

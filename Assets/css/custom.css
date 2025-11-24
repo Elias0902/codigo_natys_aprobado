@@ -1,0 +1,5 @@
+/* Estilos personalizados para notificaciones de error en rojo */
+.swal-toast-error {
+    background-color: #d31111 !important;
+    color: white !important;
+}

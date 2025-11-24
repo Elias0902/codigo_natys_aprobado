@@ -2,11 +2,130 @@ $(document).ready(function() {
     // Configurar fecha actual
     $('#fecha').val(new Date().toISOString().split('T')[0]);
 
-    // Asignar evento al botón de agregar producto (debe estar al inicio)
+    // Inicializar dropdowns de Bootstrap manualmente
+    function inicializarDropdowns() {
+        // Inicializar el dropdown de reportes
+        const dropdownReportes = document.getElementById('dropdownReportes');
+        if (dropdownReportes) {
+            new bootstrap.Dropdown(dropdownReportes);
+        }
+        
+        // Inicializar todos los dropdowns en la página
+        var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'));
+        var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
+            return new bootstrap.Dropdown(dropdownToggleEl);
+        });
+    }
+
+    // Llamar a la inicialización de dropdowns
+    inicializarDropdowns();
+
+    // Manejar clic en opción de reporte por fechas
+    $(document).on('click', '.reporte-option', function(e) {
+        e.preventDefault();
+        const tipo = $(this).data('tipo');
+        if (tipo === 'fechas') {
+            $('#modalReporteFechas').modal('show');
+        }
+    });
+
+    // Configurar fechas por defecto para el modal de reporte por fechas
+    const fechaFin = new Date();
+    const fechaInicio = new Date();
+    fechaInicio.setDate(fechaInicio.getDate() - 30);
+    
+    $('#fechaInicio').val(fechaInicio.toISOString().split('T')[0]);
+    $('#fechaFin').val(fechaFin.toISOString().split('T')[0]);
+
+    // Manejar clic en el botón de generar reporte
+    $('#btnGenerarReporte').click(function() {
+        const fechaInicio = $('#fechaInicio').val();
+        const fechaFin = $('#fechaFin').val();
+        const estado = $('#tipoEstado').val();
+        
+        if (!fechaInicio || !fechaFin) {
+            toastr.error('Por favor seleccione ambas fechas');
+            return;
+        }
+        
+        if (new Date(fechaInicio) > new Date(fechaFin)) {
+            toastr.error('La fecha de inicio no puede ser mayor a la fecha fin');
+            return;
+        }
+        
+        // Construir la URL del reporte
+        let url = `index.php?url=pedido&action=reporte_lista&fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`;
+        
+        if (estado !== 'todos') {
+            url += `&estado=${estado}`;
+        }
+        
+        // Abrir el reporte en una nueva pestaña
+        window.open(url, '_blank');
+        $('#modalReporteFechas').modal('hide');
+    });
+
+    // Asignar evento al botón de agregar producto
     $(document).on('click', '#btnAgregarProducto', function() {
         $('#formAgregarProducto')[0].reset();
         $('#modalAgregarProducto').modal('show');
     });
+
+    // Función para generar cards de pedidos pendientes en móvil
+    function generarCardsPendientes(pedidos) {
+        const container = $('#pendientesMovil');
+        container.empty();
+        
+        if (pedidos.length === 0) {
+            container.html('<div class="alert alert-info text-center">No hay pedidos pendientes</div>');
+            return;
+        }
+        
+        pedidos.forEach(function(pedido) {
+            const card = `
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title mb-0">Pedido #${pedido.id_pedido}</h5>
+                            <span class="badge badge-estado-pendiente">Pendiente</span>
+                        </div>
+                        
+                        <div class="mb-2">
+                            <div class="text-muted small">Fecha</div>
+                            <div>${pedido.fecha}</div>
+                        </div>
+                        
+                        <div class="mb-2">
+                            <div class="text-muted small">Cliente</div>
+                            <div><strong>${pedido.nomcliente}</strong></div>
+                            <div class="small">${pedido.ced_cliente}</div>
+                        </div>
+                        
+                        <div class="mb-2">
+                            <div class="text-muted small">Total</div>
+                            <div class="fw-bold text-success">$${parseFloat(pedido.total).toFixed(2)}</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="text-muted small">Productos</div>
+                            <div>${pedido.nombre_producto || 'Producto'} (${pedido.cant_producto})</div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-end gap-2">
+                            <button class="btn btn-sm btn-info ver-detalle-pendiente" data-id="${pedido.id_pedido}" title="Ver detalle">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-primary editar-pedido" data-id="${pedido.id_pedido}" title="Editar">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.append(card);
+        });
+    }
 
     // Inicializar DataTable de pedidos pendientes
     const tablaPendientes = $('#tablaPendientes').DataTable({
@@ -16,8 +135,11 @@ $(document).ready(function() {
             thousands: "."
         },
         ajax: {
-            url: 'index.php?url=pedido&action=listarPendientes',
-            dataSrc: 'data'
+            url: 'index.php?url=pedido&action=listarPendientes&ajax=1',
+            dataSrc: function(json) {
+                generarCardsPendientes(json.data);
+                return json.data;
+            }
         },
         columns: [
             { data: 'id_pedido' },
@@ -34,20 +156,106 @@ $(document).ready(function() {
                     return `$${parseFloat(data).toFixed(2)}`;
                 }
             },
-            { data: 'cant_producto' },
+            { 
+                data: null,
+                render: function(data) {
+                    const nombreProducto = data.nombre_producto || 'Producto';
+                    return `${nombreProducto} (${data.cant_producto})`;
+                }
+            },
             {
                 data: null,
                 render: function(data) {
                     return `
                         <div class="btn-group btn-group-sm" role="group">
-                            <button class="btn btn-info btn-sm ver-detalle" data-id="${data.id_pedido}" title="Ver detalle">
+                            <button class="btn btn-info btn-sm ver-detalle-pendiente" data-id="${data.id_pedido}" title="Ver detalle">
                                 <i class="fas fa-eye"></i>
                             </button>
+                            <button class="btn btn-primary btn-sm editar-pedido" data-id="${data.id_pedido}" title="Editar">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+
                         </div>`;
                 }
             }
         ]
     });
+
+    // Función para generar cards móviles de pedidos generales
+    function generarCardsPedidos(pedidos) {
+        const container = $('#pedidosMovil');
+        container.empty();
+        
+        pedidos.forEach(function(pedido) {
+            let estadoBadge, acciones;
+            
+            if (pedido.estado == 0) {
+                estadoBadge = '<span class="badge badge-estado-pendiente">Pendiente</span>';
+                acciones = `
+                    <button class="btn btn-sm btn-info ver-detalle" data-id="${pedido.id_pedido}" title="Ver detalle">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-sm btn-primary editar-pedido" data-id="${pedido.id_pedido}" title="Editar">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>`;
+            } else if (pedido.estado == 1) {
+                estadoBadge = '<span class="badge badge-estado-aprobado">Aprobado</span>';
+                acciones = `
+                    <button class="btn btn-sm btn-info ver-detalle" data-id="${pedido.id_pedido}" title="Ver detalle">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger eliminar-pedido" data-id="${pedido.id_pedido}" title="Eliminar">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>`;
+            } else {
+                estadoBadge = '<span class="badge badge-estado-cancelado">Cancelado</span>';
+                acciones = `
+                    <button class="btn btn-sm btn-info ver-detalle" data-id="${pedido.id_pedido}" title="Ver detalle">
+                        <i class="fas fa-eye"></i>
+                    </button>`;
+            }
+            
+            const nombreProducto = pedido.nombre_producto || 'Producto';
+            
+            const card = `
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title mb-0">Pedido #${pedido.id_pedido}</h5>
+                            ${estadoBadge}
+                        </div>
+                        
+                        <div class="mb-2">
+                            <div class="text-muted small">Fecha</div>
+                            <div>${pedido.fecha}</div>
+                        </div>
+                        
+                        <div class="mb-2">
+                            <div class="text-muted small">Cliente</div>
+                            <div><strong>${pedido.nomcliente}</strong></div>
+                            <div class="small">${pedido.ced_cliente}</div>
+                        </div>
+                        
+                        <div class="mb-2">
+                            <div class="text-muted small">Total</div>
+                            <div class="fw-bold text-success">$${parseFloat(pedido.total).toFixed(2)}</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="text-muted small">Productos</div>
+                            <div>${nombreProducto} (${pedido.cant_producto})</div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-end gap-2">
+                            ${acciones}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.append(card);
+        });
+    }
 
     // Inicializar DataTable de pedidos principales
     const tablaPedidos = $('#tablaPedidos').DataTable({
@@ -57,8 +265,13 @@ $(document).ready(function() {
             thousands: "."
         },
         ajax: {
-            url: 'index.php?url=pedido&action=listar&estado=1', 
-            dataSrc: 'data'
+            url: 'index.php?url=pedido&action=listar&ajax=1',
+            dataSrc: function(json) {
+                // Filtrar solo pedidos aprobados (estado = 1) para la vista principal
+                const pedidosAprobados = json.data.filter(pedido => pedido.estado == 1);
+                generarCardsPedidos(pedidosAprobados);
+                return pedidosAprobados;
+            }
         },
         columns: [
             { data: 'id_pedido' },
@@ -75,13 +288,23 @@ $(document).ready(function() {
                     return `$${parseFloat(data).toFixed(2)}`;
                 }
             },
-            { data: 'cant_producto' },
+            { 
+                data: null,
+                render: function(data) {
+                    const nombreProducto = data.nombre_producto || 'Producto';
+                    return `${nombreProducto} (${data.cant_producto})`;
+                }
+            },
             { 
                 data: 'estado',
                 render: function(data) {
-                    return data == 1 
-                        ? '<span class="badge bg-success">Pagado</span>' 
-                        : '<span class="badge bg-warning text-dark">Por pagar</span>';
+                    if (data == 0) {
+                        return '<span class="badge badge-estado-pendiente">Pendiente</span>';
+                    } else if (data == 1) {
+                        return '<span class="badge badge-estado-aprobado">Aprobado</span>';
+                    } else {
+                        return '<span class="badge badge-estado-cancelado">Cancelado</span>';
+                    }
                 }
             },
             {
@@ -92,19 +315,20 @@ $(document).ready(function() {
                             <button class="btn btn-info btn-sm ver-detalle" data-id="${data.id_pedido}" title="Ver detalle">
                                 <i class="fas fa-eye"></i>
                             </button>`;
-                    
+
                     if (data.estado == 0) {
                         acciones += `
                             <button class="btn btn-primary btn-sm editar-pedido" data-id="${data.id_pedido}" title="Editar">
-                                <i class="fas fa-edit"></i>
+                                <i class="fas fa-sync-alt"></i>
                             </button>`;
-                    }
-                    
-                    acciones += `
+                    } else if (data.estado == 1) {
+                        acciones += `
                             <button class="btn btn-danger btn-sm eliminar-pedido" data-id="${data.id_pedido}" title="Eliminar">
                                 <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </div>`;
+                            </button>`;
+                    }
+
+                    acciones += `</div>`;
                     return acciones;
                 }
             }
@@ -117,72 +341,39 @@ $(document).ready(function() {
         $('#modalPendientes').modal('show');
     });
 
-    // Marcar pedido como pagado
-    $('#tablaPendientes').on('click', '.marcar-pagado', function() {
-        const idPedido = $(this).data('id');
-        if (confirm('¿Está seguro de marcar este pedido como pagado?')) {
-            $.post('index.php?url=pedido&action=marcarPagado', { id_pedido: idPedido })
-                .done(function(response) {
-                    const result = typeof response === 'string' ? JSON.parse(response) : response;
-                    if (result.success) {
-                        toastr.success('Pedido marcado como pagado');
-                        tablaPendientes.ajax.reload();
-                        tablaPedidos.ajax.reload();
-                    } else {
-                        toastr.error(result.message || 'Error al actualizar el pedido');
-                    }
-                })
-                .fail(function() {
-                    toastr.error('Error al procesar la solicitud');
-                });
-        }
-    });
-
-    // Filtrar por estado
-    $('.filter-btn').click(function() {
-        const estado = $(this).data('estado');
-        $('.filter-btn').removeClass('active');
-        $(this).addClass('active');
-        
-        let url = 'index.php?url=pedido&action=listar';
-        if (estado !== 'all') {
-            url += '&estado=' + estado;
-        }
-        
-        tablaPedidos.ajax.url(url).load();
-    });
-
-    // Función para ver detalle del pedido (modalDetalle)
+    // Función para ver detalle del pedido
     function verDetallePedido(idPedido) {
-        $.getJSON(`index.php?url=pedido&action=verDetalle&id_pedido=${idPedido}`)
+        $.getJSON(`index.php?url=pedido&action=obtenerDetalle&id=${idPedido}`)
             .done(function(response) {
                 if (response.success) {
                     const data = response.data;
                     
-                    // Llenar modal de detalle
                     $('#pedidoId').text(data.pedido.id_pedido);
-                    $('#detalleCliente').text(data.cliente.nomcliente + ' (' + data.cliente.ced_cliente + ')');
-                    $('#detalleFecha').text(data.pedido.fecha);
+                    $('#detalleCliente').text(data.cliente.nombre_completo + ' (' + data.cliente.cedula + ')');
+                    $('#detalleFecha').text(data.pedido.fecha_creacion_formatted);
                     $('#detalleTelefono').text(data.cliente.telefono);
                     $('#detalleDireccion').text(data.cliente.direccion);
-                    $('#detalleTotal').text(data.pedido.total_formatted || parseFloat(data.pedido.total).toFixed(2));
-                    $('#detalleTotalFinal').text(data.pedido.total_formatted || parseFloat(data.pedido.total).toFixed(2));
+                    $('#detalleTotal').text(data.pedido.total_formatted);
+                    $('#detalleTotalFinal').text(data.pedido.total_formatted);
                     
-                    // Estado
-                    const estadoBadge = data.pedido.estado == 1 
-                        ? '<span class="badge bg-success">Pagado</span>' 
-                        : '<span class="badge bg-warning text-dark">Pendiente</span>';
+                    let estadoBadge;
+                    if (data.pedido.estado == 0) {
+                        estadoBadge = '<span class="badge badge-estado-pendiente">Pendiente</span>';
+                    } else if (data.pedido.estado == 1) {
+                        estadoBadge = '<span class="badge badge-estado-aprobado">Aprobado</span>';
+                    } else {
+                        estadoBadge = '<span class="badge badge-estado-cancelado">Cancelado</span>';
+                    }
                     $('#detalleEstado').html(estadoBadge);
                     
-                    // Productos
                     $('#detalleProductos').empty();
-                    data.productos.forEach(function(producto) {
+                    data.detalles.forEach(function(producto) {
                         $('#detalleProductos').append(`
                             <tr>
-                                <td>${producto.nombre}</td>
-                                <td class="text-end">${producto.precio_unitario_formatted || parseFloat(producto.precio).toFixed(2)}</td>
+                                <td>${producto.nombre_producto}</td>
+                                <td class="text-end">${producto.precio_unitario_formatted || producto.precio_formatted || '$0.00'}</td>
                                 <td class="text-center">${producto.cantidad}</td>
-                                <td class="text-end">${producto.subtotal_formatted || parseFloat(producto.subtotal).toFixed(2)}</td>
+                                <td class="text-end">${producto.subtotal_formatted}</td>
                             </tr>
                         `);
                     });
@@ -197,142 +388,261 @@ $(document).ready(function() {
             });
     }
 
-    // Manejador de eventos para ver detalles en ambas tablas
-    $('#tablaPedidos, #tablaPendientes').on('click', '.ver-detalle', function(e) {
+    // Manejador de eventos para ver detalles
+    $(document).on('click', '.ver-detalle, .ver-detalle-pendiente', function(e) {
         e.preventDefault();
         e.stopPropagation();
         const idPedido = $(this).data('id');
         verDetallePedido(idPedido);
     });
 
-    // Función para cargar el formulario de edición (modalFormulario)
-    function cargarFormularioPedido(idPedido) {
-        // Mostrar loading
-        const $modal = $('#modalFormulario');
-        $modal.find('.modal-body').html('<div class="text-center my-5"><div class="spinner-border" role="status"><span class="visually-hidden">Cargando...</span></div></div>');
-        $modal.modal('show');
-        
-        // Obtener detalles del pedido para edición
-        $.getJSON(`index.php?url=pedido&action=formEditar&id_pedido=${idPedido}`)
+
+
+    // Eliminar pedido aprobado
+    $(document).on('click', '.eliminar-pedido', function() {
+        const idPedido = $(this).data('id');
+
+        // Crear modal de confirmación personalizado
+        const confirmModal = `
+            <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title" id="confirmDeleteModalLabel">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Confirmar Eliminación
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="text-center mb-4">
+                                <div class="mb-3">
+                                    <i class="fas fa-trash-alt fa-3x text-danger"></i>
+                                </div>
+                                <h5 class="fw-bold text-danger">¿Eliminar Pedido #${idPedido}?</h5>
+                                <p class="text-muted mb-0">Esta acción no se puede deshacer.</p>
+                            </div>
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-circle me-2"></i>
+                                <strong>Advertencia:</strong> Se eliminará permanentemente el pedido aprobado y toda su información asociada.
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="fas fa-times me-1"></i>
+                                Cancelar
+                            </button>
+                            <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                                <i class="fas fa-trash-alt me-1"></i>
+                                Eliminar Pedido
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        $('body').append(confirmModal);
+        $('#confirmDeleteModal').modal('show');
+
+        // Manejar confirmación de eliminación
+        $('#confirmDeleteBtn').off('click').on('click', function() {
+            $('#confirmDeleteBtn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2" role="status"></span>Eliminando...');
+
+            $.post('index.php?url=pedido&action=eliminar', {
+                id_pedido: idPedido
+            }, function(response) {
+                const result = typeof response === 'string' ? JSON.parse(response) : response;
+                if (result.success) {
+                    toastr.success('Pedido eliminado exitosamente', 'Éxito', {
+                        timeOut: 3000,
+                        progressBar: true,
+                        closeButton: true
+                    });
+                    tablaPedidos.ajax.reload();
+                    $('#confirmDeleteModal').modal('hide');
+                } else {
+                    toastr.error(result.message, 'Error', {
+                        timeOut: 4000,
+                        progressBar: true,
+                        closeButton: true
+                    });
+                }
+            }, 'json').fail(function() {
+                toastr.error('Error al procesar la solicitud', 'Error de Conexión', {
+                    timeOut: 4000,
+                    progressBar: true,
+                    closeButton: true
+                });
+            }).always(function() {
+                $('#confirmDeleteModal').modal('hide');
+                $('#confirmDeleteModal').remove();
+            });
+        });
+
+        // Limpiar modal cuando se cierre
+        $('#confirmDeleteModal').on('hidden.bs.modal', function() {
+            $(this).remove();
+        });
+    });
+
+    // Función para cargar clientes via AJAX
+    function cargarClientes(callback) {
+        $.getJSON('index.php?url=cliente&action=listar')
             .done(function(response) {
                 if (response && response.success) {
-                    // Restaurar el formulario original
-                    $modal.find('.modal-body').html(`
-                        <form id="formPedido">
-                            <input type="hidden" id="id_pedido" name="id_pedido">
-                            
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label for="ced_cliente" class="form-label">Cliente *</label>
-                                    <select class="form-select" id="ced_cliente" name="ced_cliente" required>
-                                        <option value="">Seleccione un cliente</option>
-                                        ${$('#ced_cliente').html().split('<option value="">Seleccione un cliente</option>')[1]}
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="fecha" class="form-label">Fecha</label>
-                                    <input type="date" class="form-control" id="fecha" name="fecha" required>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Productos *</label>
-                                <div class="table-responsive">
-                                    <table class="table table-sm" id="tablaProductos">
-                                        <thead>
-                                            <tr>
-                                                <th>Producto</th>
-                                                <th>Precio</th>
-                                                <th>Cantidad</th>
-                                                <th>Subtotal</th>
-                                                <th>Acciones</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="productos-seleccionados">
-                                            <!-- Productos se agregarán aquí -->
-                                        </tbody>
-                                        <tfoot>
-                                            <tr>
-                                                <td colspan="3" class="text-end"><strong>Total:</strong></td>
-                                                <td id="total-pedido-form">0.00</td>
-                                                <td></td>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
-                                </div>
-                                <button type="button" class="btn btn-sm btn-primary" id="btnAgregarProducto">
-                                    <i class="fas fa-plus me-1"></i>Agregar Producto
-                                </button>
-                            </div>
-
-                            <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                    <i class="fas fa-times me-1"></i>Cancelar
-                                </button>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save me-1"></i>Guardar Cambios
-                                </button>
-                            </div>
-                        </form>
-                    `);
-
-                    const pedido = response.data.pedido;
-                    const cliente = response.data.cliente;
-                    const productos = response.data.productos;
-                    
-                    // Configurar título
-                    $('#modalFormularioTitulo').text('Editar Pedido #' + pedido.id_pedido);
-                    
-                    // Llenar datos básicos
-                    $('#id_pedido').val(pedido.id_pedido);
-                    $('#ced_cliente').val(cliente.ced_cliente);
-                    $('#fecha').val(pedido.fecha.split('T')[0]);
-                    
-                    // Limpiar y agregar productos
-                    $('#productos-seleccionados').empty();
-                    productos.forEach(function(producto) {
-                        agregarProductoATabla({
-                            cod_producto: producto.cod_producto,
-                            nombre: producto.nombre,
-                            precio: producto.precio,
-                            cantidad: producto.cantidad,
-                            subtotal: producto.subtotal
-                        });
+                    let options = '<option value="">Seleccione un cliente</option>';
+                    response.data.forEach(function(cliente) {
+                        options += `<option value="${cliente.ced_cliente}">${cliente.nomcliente} - ${cliente.ced_cliente}</option>`;
                     });
-                    
-                    actualizarTotal();
-                    
-                    // Reasignar eventos después de reconstruir el formulario
-                    asignarEventosFormulario();
+                    callback(options);
                 } else {
-                    const errorMsg = (response && response.message) || 'Error al cargar el pedido';
-                    toastr.error(errorMsg);
-                    $modal.modal('hide');
+                    toastr.error('Error al cargar la lista de clientes');
+                    callback('<option value="">Error al cargar clientes</option>');
                 }
             })
             .fail(function() {
-                toastr.error('Error al cargar el pedido para edición');
-                $modal.modal('hide');
+                toastr.error('Error al conectar con el servidor para cargar clientes');
+                callback('<option value="">Error al cargar clientes</option>');
             });
     }
 
+    // Función para cargar el formulario de edición - CORREGIDA
+    function cargarFormularioPedido(idPedido) {
+        // Cerrar cualquier modal abierto primero
+        $('.modal').modal('hide');
+
+        // Esperar un momento para que se cierre el modal anterior
+        setTimeout(function() {
+            const $modal = $('#modalFormulario');
+            $modal.find('.modal-body').html('<div class="text-center my-5"><div class="spinner-border" role="status"><span class="visually-hidden">Cargando...</span></div><div class="mt-2">Cargando datos del pedido...</div></div>');
+            $modal.modal('show');
+
+            $.getJSON(`index.php?url=pedido&action=obtenerDetalle&id=${idPedido}`)
+                .done(function(response) {
+                    if (response && response.success) {
+                        const pedido = response.data.pedido;
+                        const cliente = response.data.cliente;
+                        const productos = response.data.detalles || [];
+
+                        // Construir el formulario de edición
+                        const formularioHTML = `
+                            <form id="formPedido">
+                                <input type="hidden" id="id_pedido" name="id_pedido" value="${pedido.id_pedido}">
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="ced_cliente" class="form-label">Cliente *</label>
+                                        <select class="form-select" id="ced_cliente" name="ced_cliente" required>
+                                            <option value="">Cargando clientes...</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="fecha" class="form-label">Fecha</label>
+                                        <input type="date" class="form-control" id="fecha" name="fecha" required value="${pedido.fecha_creacion}">
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Productos *</label>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm" id="tablaProductos">
+                                            <thead>
+                                                <tr>
+                                                    <th>Producto</th>
+                                                    <th>Precio</th>
+                                                    <th>Cantidad</th>
+                                                    <th>Subtotal</th>
+                                                    <th>Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="productos-seleccionados">
+                                            </tbody>
+                                            <tfoot>
+                                                <tr>
+                                                    <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                                    <td id="total-pedido-form">${pedido.total_formatted}</td>
+                                                    <td></td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-primary" id="btnAgregarProducto">
+                                        <i class="fas fa-plus me-1"></i>Agregar Producto
+                                    </button>
+                                </div>
+
+                                <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                        <i class="fas fa-times me-1"></i>Cancelar
+                                    </button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-1"></i>Actualizar Pedido
+                                    </button>
+                                </div>
+                            </form>
+                        `;
+
+                        $modal.find('.modal-body').html(formularioHTML);
+                        $('#modalFormularioTitulo').text('Actualizar Pedido #' + pedido.id_pedido);
+
+                        // Cargar clientes y seleccionar el actual
+                        cargarClientes(function(options) {
+                            $('#ced_cliente').html(options);
+                            if (cliente.cedula) {
+                                $('#ced_cliente').val(cliente.cedula);
+                            }
+                        });
+
+                        // Cargar productos en la tabla
+                        $('#productos-seleccionados').empty();
+                        productos.forEach(function(producto) {
+                            agregarProductoATabla({
+                                cod_producto: producto.cod_producto,
+                                nombre: producto.nombre_producto,
+                                precio: producto.precio_unitario,
+                                cantidad: producto.cantidad,
+                                subtotal: producto.subtotal
+                            });
+                        });
+
+                        actualizarTotal();
+                        asignarEventosFormulario();
+                    } else {
+                        const errorMsg = (response && response.message) || 'Error al cargar el pedido';
+                        toastr.error(errorMsg);
+                        $modal.modal('hide');
+                    }
+                })
+                .fail(function() {
+                    toastr.error('Error al cargar el pedido para edición');
+                    $modal.modal('hide');
+                });
+        }, 300);
+    }
+
+
+
     // Función para reasignar eventos después de reconstruir el formulario
     function asignarEventosFormulario() {
-        // Asignar evento al botón de agregar producto
         $('#btnAgregarProducto').off('click').on('click', function() {
             $('#formAgregarProducto')[0].reset();
             $('#modalAgregarProducto').modal('show');
         });
 
-        // Asignar evento al formulario principal
         $('#formPedido').off('submit').on('submit', function(e) {
             e.preventDefault();
             enviarFormularioPedido();
         });
     }
 
-    // Función para enviar el formulario (separada para reutilización)
+    // Función para enviar el formulario
     function enviarFormularioPedido() {
+        if (!$('#ced_cliente').val()) {
+            toastr.warning('Por favor seleccione un cliente para el pedido');
+            return;
+        }
+        
         if ($('#productos-seleccionados tr').length === 0) {
             toastr.error('Debe agregar al menos un producto al pedido');
             return;
@@ -360,11 +670,35 @@ $(document).ready(function() {
 
         const $submitBtn = $('#formPedido').find('button[type="submit"]');
         const originalBtnText = $submitBtn.html();
-        $submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...');
+        $submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Actualizando...');
 
         const url = formData.id_pedido 
-            ? 'index.php?url=pedido&action=actualizar'
+            ? 'index.php?url=pedido&action=editar'
             : 'index.php?url=pedido&action=guardar';
+
+        // Mostrar modal de carga
+        const loadingModal = `
+            <div class="modal fade show" id="loadingModal" tabindex="-1" style="display: block; background: rgba(0,0,0,0.8);" aria-modal="true" role="dialog">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-body text-center py-5">
+                            <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                            <h5 class="mb-2">Actualizando pedido...</h5>
+                            <p class="text-muted mb-0">Por favor espere mientras se guarda la información</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        $('body').append(loadingModal);
+
+        // Deshabilitar interacciones
+        $('button').prop('disabled', true);
+        $('input').prop('disabled', true);
+        $('select').prop('disabled', true);
+        $('textarea').prop('disabled', true);
 
         $.ajax({
             url: url,
@@ -375,9 +709,12 @@ $(document).ready(function() {
         })
         .done(function(response) {
             if (response && response.success) {
-                toastr.success(response.message || 'Operación realizada con éxito');
+                toastr.success(response.message || 'Pedido actualizado con éxito');
                 $('#modalFormulario').modal('hide');
-                $('#tablaPedidos').DataTable().ajax.reload();
+                // Recargar después de un breve delay para mostrar el mensaje
+                setTimeout(function() {
+                    window.location.reload();
+                }, 1500);
             } else {
                 toastr.error(response.message || 'Error al procesar la solicitud');
             }
@@ -387,13 +724,20 @@ $(document).ready(function() {
             console.error(jqXHR.responseText);
         })
         .always(function() {
+            // Ocultar modal de carga y restaurar interacciones
+            $('#loadingModal').remove();
+            $('button').prop('disabled', false);
+            $('input').prop('disabled', false);
+            $('select').prop('disabled', false);
+            $('textarea').prop('disabled', false);
             $submitBtn.prop('disabled', false).html(originalBtnText);
         });
     }
 
     // Editar pedido
-    $('#tablaPedidos').on('click', '.editar-pedido', function(e) {
+    $(document).on('click', '.editar-pedido', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         const idPedido = $(this).data('id');
         cargarFormularioPedido(idPedido);
     });
@@ -405,6 +749,7 @@ $(document).ready(function() {
         $('#id_pedido').val('');
         $('#productos-seleccionados').empty();
         $('#total-pedido-form').text('0.00');
+        $('#fecha').val(new Date().toISOString().split('T')[0]);
         $('#modalFormulario').modal('show');
     });
 
@@ -430,23 +775,22 @@ $(document).ready(function() {
         actualizarTotal();
     }
 
-    // Eliminar pedido
-    $('#tablaPedidos').on('click', '.eliminar-pedido', function() {
-        const idPedido = $(this).data('id');
-        
-        if (confirm('¿Está seguro de eliminar este pedido? Esta acción no se puede deshacer.')) {
-            $.post('index.php?url=pedido&action=eliminar', {
-                id_pedido: idPedido
-            }, function(response) {
-                if (response.success) {
-                    toastr.success(response.message);
-                    tablaPedidos.ajax.reload();
-                } else {
-                    toastr.error(response.message);
-                }
-            }, 'json');
-        }
+    // Eliminar producto del pedido
+    $('#productos-seleccionados').on('click', '.eliminar-producto', function() {
+        $(this).closest('tr').remove();
+        actualizarTotal();
     });
+
+    // Actualizar total del pedido
+    function actualizarTotal() {
+        let total = 0;
+        
+        $('.subtotal').each(function() {
+            total += parseFloat($(this).text());
+        });
+        
+        $('#total-pedido-form').text(total.toFixed(2));
+    }
 
     // Calcular subtotal cuando cambia cantidad o precio
     $('#cantidad, #precio').on('input', function() {
@@ -505,23 +849,6 @@ $(document).ready(function() {
             form.reportValidity();
         }
     });
-
-    // Eliminar producto del pedido
-    $('#productos-seleccionados').on('click', '.eliminar-producto', function() {
-        $(this).closest('tr').remove();
-        actualizarTotal();
-    });
-
-    // Actualizar total del pedido
-    function actualizarTotal() {
-        let total = 0;
-        
-        $('.subtotal').each(function() {
-            total += parseFloat($(this).text());
-        });
-        
-        $('#total-pedido-form').text(total.toFixed(2));
-    }
 
     // Asignar eventos iniciales
     asignarEventosFormulario();

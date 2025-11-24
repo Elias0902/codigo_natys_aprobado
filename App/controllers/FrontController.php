@@ -10,7 +10,7 @@
         public function __construct() {
             if (isset($_REQUEST["url"]) && !empty($_REQUEST["url"])) {
                 $this->url = strtolower($_REQUEST["url"]);
-                $this->dir = 'app/controllers/';
+                $this->dir = 'App/controllers/';
                 $this->controllers = 'controller.php';
                 $this->getURL();
 
@@ -18,7 +18,7 @@
                 
                 echo "Por Favor Espere, estamos redirigiendo....";
                 
-                die("<script>location='?url=login'</script>");
+                die("<script>location='?url=user&type=login'</script>");
             }
         }
 
@@ -30,7 +30,7 @@
 } else {
 
     echo "Error 404: controlador no encontrado";
-    die("<script>location='?url=error404'</script>");
+    die("<script>'</script>");
 }
         }
 

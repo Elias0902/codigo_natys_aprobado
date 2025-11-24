@@ -1,14 +1,15 @@
 <?php
-// Habilitar reporte de errores
+
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 define('DEBUG_MODE', true);
 
 require_once 'App/Helpers/auth_check.php';
-use App\Natys\models\Pedido;
-use App\Natys\models\Cliente;
-use App\Natys\models\Producto;
+use App\Natys\Models\Pedido;
+use App\Natys\Models\Cliente;
+use App\Natys\Models\Producto;
+use App\Natys\Helpers\ReportePDF;
 
 $pedido = new Pedido();
 $cliente = new Cliente();
@@ -16,11 +17,9 @@ $producto = new Producto();
 
 $action = $_REQUEST['action'] ?? 'listar';
 
-// Obtener clientes y productos activos para los formularios
 $clientesActivos = $cliente->listar();
-$productosActivos = $producto->listar();
+$productosActivos = $producto->listarProductos();
 
-// Pasar las variables a la vista
 $clientes = $clientesActivos;
 $productos = $productosActivos;
 
@@ -30,55 +29,55 @@ switch ($action) {
         break;
 
     case 'verDetalle':
-    header('Content-Type: application/json');
-    try {
-        if (!isset($_GET['id_pedido'])) {
-            throw new Exception('Falta el ID del pedido');
+        header('Content-Type: application/json');
+        try {
+            if (!isset($_GET['id_pedido'])) {
+                throw new Exception('Falta el ID del pedido');
+            }
+            
+            $idPedido = $_GET['id_pedido'];
+            $pedidoData = $pedido->obtenerDetalle($idPedido);
+            
+            if (!$pedidoData) {
+                throw new Exception('Pedido no encontrado');
+            }
+            
+            $response = [
+                'success' => true,
+                'data' => [
+                    'pedido' => [
+                        'id_pedido' => $pedidoData['pedido']['id_pedido'],
+                        'fecha' => $pedidoData['pedido']['fecha_creacion_formatted'],
+                        'total' => $pedidoData['pedido']['total'],
+                        'estado' => $pedidoData['pedido']['estado']
+                    ],
+                    'cliente' => [
+                        'ced_cliente' => $pedidoData['cliente']['cedula'],
+                        'nomcliente' => $pedidoData['cliente']['nombre_completo'],
+                        'telefono' => $pedidoData['cliente']['telefono'],
+                        'direccion' => $pedidoData['cliente']['direccion']
+                    ],
+                    'productos' => array_map(function($item) {
+                        return [
+                            'nombre' => $item['nombre_producto'],
+                            'precio' => $item['precio_unitario'],
+                            'cantidad' => $item['cantidad'],
+                            'subtotal' => $item['subtotal']
+                        ];
+                    }, $pedidoData['detalles'])
+                ]
+            ];
+            
+            echo json_encode($response, JSON_UNESCAPED_UNICODE);
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false, 
+                'message' => 'Error al cargar el pedido: ' . $e->getMessage()
+            ]);
         }
-        
-        $idPedido = $_GET['id_pedido'];
-        $pedidoData = $pedido->obtenerDetalle($idPedido);
-        
-        if (!$pedidoData) {
-            throw new Exception('Pedido no encontrado');
-        }
-        
-        $response = [
-            'success' => true,
-            'data' => [
-                'pedido' => [
-                    'id_pedido' => $pedidoData['pedido']['id_pedido'],
-                    'fecha' => $pedidoData['pedido']['fecha_creacion_formatted'],
-                    'total' => $pedidoData['pedido']['total'],
-                    'estado' => $pedidoData['pedido']['estado']
-                ],
-                'cliente' => [
-                    'ced_cliente' => $pedidoData['cliente']['cedula'],
-                    'nomcliente' => $pedidoData['cliente']['nombre_completo'],
-                    'telefono' => $pedidoData['cliente']['telefono'],
-                    'direccion' => $pedidoData['cliente']['direccion']
-                ],
-                'productos' => array_map(function($item) {
-                    return [
-                        'nombre' => $item['nombre_producto'],
-                        'precio' => $item['precio_unitario'],
-                        'cantidad' => $item['cantidad'],
-                        'subtotal' => $item['subtotal']
-                    ];
-                }, $pedidoData['detalles'])
-            ]
-        ];
-        
-        echo json_encode($response, JSON_UNESCAPED_UNICODE);
-        
-    } catch (Exception $e) {
-        http_response_code(500);
-        echo json_encode([
-            'success' => false, 
-            'message' => 'Error al cargar el pedido: ' . $e->getMessage()
-        ]);
-    }
-    break;
+        break;
 
     case 'guardar':
         header('Content-Type: application/json');
@@ -137,13 +136,12 @@ switch ($action) {
         echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         exit;
 
-    case 'actualizar':
+    case 'editar':
         header('Content-Type: application/json');
-        session_start(); // Asegurar que la sesión esté iniciada
-        
+
         try {
-            // Verificar si el usuario está autenticado
-            if (!isset($_SESSION['usuario_id'])) {
+
+            if (!isset($_SESSION['usuario'])) {
                 throw new Exception('Sesión expirada. Por favor, inicie sesión nuevamente.');
             }
             
@@ -153,29 +151,29 @@ switch ($action) {
                 throw new Exception('Faltan datos requeridos para la actualización');
             }
             
-            // Validar que haya al menos un producto
+            
             if (empty($data['productos']) || !is_array($data['productos'])) {
                 throw new Exception('Debe incluir al menos un producto en el pedido');
             }
             
-            // Validar cada producto
+            
             foreach ($data['productos'] as $index => $producto) {
                 if (!isset($producto['cod_producto'], $producto['cantidad'], $producto['precio'])) {
                     throw new Exception('Producto en la posición ' . ($index + 1) . ' no tiene todos los campos requeridos');
                 }
                 
-                // Asegurar que los valores numéricos sean correctos
+                
                 $data['productos'][$index]['cantidad'] = (int)$producto['cantidad'];
                 $data['productos'][$index]['precio'] = (float)$producto['precio'];
                 $data['productos'][$index]['subtotal'] = $data['productos'][$index]['cantidad'] * $data['productos'][$index]['precio'];
             }
             
-            // Recalcular el total por si acaso
+            
             $data['total'] = array_reduce($data['productos'], function($sum, $item) {
                 return $sum + ($item['precio'] * $item['cantidad']);
             }, 0);
             
-            // Actualizar el pedido
+            
             $resultado = $pedido->actualizarPedido(
                 $data['id_pedido'],
                 $data['ced_cliente'],
@@ -195,7 +193,7 @@ switch ($action) {
                     ]
                 ]);
             } else {
-                throw new Exception('No se pudo actualizar el pedido. Verifique los datos e intente nuevamente.');
+                throw new Exception('No se pudo editar el pedido. Verifique los datos e intente nuevamente.');
             }
         } catch (Exception $e) {
             http_response_code(400);
@@ -207,14 +205,51 @@ switch ($action) {
         }
         break;
 
+
+
+    // Eliminar pedido aprobado
+    case 'eliminar':
+        header('Content-Type: application/json');
+        try {
+            if (!isset($_POST['id_pedido'])) {
+                throw new Exception('Falta el ID del pedido');
+            }
+
+            $idPedido = $_POST['id_pedido'];
+            $resultado = $pedido->eliminarPedido($idPedido);
+
+            if ($resultado) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Pedido aprobado eliminado exitosamente'
+                ]);
+            } else {
+                throw new Exception('No se pudo eliminar el pedido aprobado');
+            }
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+        break;
+
     case 'marcarPagado':
         header('Content-Type: application/json');
         if (isset($_POST['id_pedido'])) {
-            $resultado = $pedido->marcarComoPagado($_POST['id_pedido']);
-            echo json_encode([
-                'success' => $resultado,
-                'message' => $resultado ? 'Pedido marcado como pagado' : 'Error al actualizar'
-            ]);
+            try {
+                $resultado = $pedido->marcarComoPagado($_POST['id_pedido']);
+                echo json_encode([
+                    'success' => $resultado,
+                    'message' => $resultado ? 'Pedido marcado como pagado' : 'Error al marcar como pagado'
+                ]);
+            } catch (Exception $e) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ]);
+            }
         } else {
             echo json_encode(['success' => false, 'message' => 'Falta ID del pedido']);
         }
@@ -239,7 +274,7 @@ switch ($action) {
                 throw new Exception('No se encontró el pedido con ID: ' . $idPedido);
             }
             
-            // Preparar la respuesta
+            
             $response = [
                 'success' => true,
                 'data' => $pedidoData
@@ -258,9 +293,9 @@ switch ($action) {
     case 'listarPendientes':
         header('Content-Type: application/json');
         try {
-            $pedidos = $pedido->listar(0); // Estado 0 para pedidos pendientes
+            $pedidos = $pedido->listar(0); 
             
-            // Formatear la respuesta para incluir la información necesaria
+            
             $response = [
                 'success' => true,
                 'data' => $pedidos
@@ -277,40 +312,408 @@ switch ($action) {
         break;
 
     case 'listar':
-        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+        $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+                  || (isset($_GET['ajax']) && $_GET['ajax'] == '1');
+        if ($isAjax) {
             header('Content-Type: application/json');
-            // Filtrar por estado si se envía
+
             $estado = $_GET['estado'] ?? null;
             $pedidos = $pedido->listar($estado);
-            echo json_encode(['data' => $pedidos]);
+            echo json_encode(['data' => $pedidos], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         } else {
-            $pedidos = $pedido->listar(1); // Por defecto mostrar solo pagados
-            include 'app/views/pedido/listar.php';
-        }
-        break;
-        
-    case 'listarPendientes':
-        header('Content-Type: application/json');
-        try {
-            $pedidos = $pedido->listar(0); // Estado 0 para pedidos pendientes
-            echo json_encode(['success' => true, 'data' => $pedidos]);
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Error al listar los pedidos pendientes: ' . $e->getMessage()
-            ]);
+            $pedidos = $pedido->listar();
+            include 'app/views/pedido/pedidoView.php';
         }
         break;
 
     case 'obtenerProductos':
         header('Content-Type: application/json');
-        $productos = $producto->listar();
+        $productos = $producto->listarProductos();
+
+
+        foreach ($productos as &$prod) {
+            $stock = $producto->obtenerStockProducto($prod['cod_producto']);
+            $prod['stock_disponible'] = $stock;
+        }
+
         echo json_encode(['data' => $productos]);
         break;
 
-    default:
-        include 'app/views/pedido/listar.php';
+    case 'eliminar':
+        header('Content-Type: application/json');
+        try {
+            if (!isset($_POST['id_pedido'])) {
+                throw new Exception('Falta el ID del pedido');
+            }
+            $idPedido = $_POST['id_pedido'];
+            
+            // Verificar el estado del pedido para determinar qué acción tomar
+            $pedidoData = $pedido->obtener($idPedido);
+            
+            if (!$pedidoData) {
+                throw new Exception('Pedido no encontrado');
+            }
+            
+            if ($pedidoData['estado'] == 1) {
+                // Pedido aprobado - eliminar directamente
+                $resultado = $pedido->eliminarPedido($idPedido);
+                $mensaje = 'Pedido aprobado eliminado exitosamente';
+            } else {
+                throw new Exception('No se puede realizar la acción sobre este pedido');
+            }
+            
+            if ($resultado) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => $mensaje
+                ]);
+            } else {
+                throw new Exception('No se pudo completar la acción');
+            }
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
         break;
 
+        
+    case 'reporte_lista':
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+        
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        if (!isset($_SESSION['usuario'])) {
+            $_SESSION['error_login'] = 'Debes iniciar sesión para acceder a esta página';
+            header('Location: index.php?url=user&type=login');
+            exit;
+        }
+
+        if (!in_array($_SESSION['usuario']['rol'], ['admin', 'superadmin'])) {
+            $_SESSION['error'] = 'No tienes permisos para generar reportes';
+            header('Location: index.php?url=pedido&action=listar');
+            exit;
+        }
+        
+        // Asegurarse de que las fechas tengan el formato correcto
+        $fechaInicio = $_GET['fecha_inicio'] ?? null;
+        $fechaFin = $_GET['fecha_fin'] ?? null;
+        $estado = $_GET['estado'] ?? 'todos';
+        
+        // Si no hay fechas, obtener los últimos 30 días
+        if (!$fechaInicio || !$fechaFin) {
+            $fechaFin = date('Y-m-d');
+            $fechaInicio = date('Y-m-d', strtotime('-30 days'));
+        }
+
+        // Convertir el estado a entero si no es 'todos'
+        $estado = $estado !== 'todos' ? (int)$estado : null;
+        
+        $esReportePorFechas = !empty($fechaInicio) && !empty($fechaFin);
+        
+        $pdf = new ReportePDF();
+        
+        if ($esReportePorFechas) {
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaInicio) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaFin)) {
+                $titulo = 'LISTADO GENERAL DE PEDIDOS';
+                $subtitulo = 'Todos los pedidos registrados';
+                $pedidos = $pedido->listar($estado);
+            } else {
+                if (strtotime($fechaInicio) > strtotime($fechaFin)) {
+                    $temp = $fechaInicio;
+                    $fechaInicio = $fechaFin;
+                    $fechaFin = $temp;
+                }
+                
+                $titulo = 'LISTADO DE PEDIDOS';
+                $subtitulo = "Del $fechaInicio al $fechaFin";
+                
+                if ($estado === 0) {
+                    $titulo = 'PEDIDOS PENDIENTES';
+                    $subtitulo = "Pendientes del $fechaInicio al $fechaFin";
+                } elseif ($estado === 1) {
+                    $titulo = 'PEDIDOS COMPLETADOS';
+                    $subtitulo = "Completados del $fechaInicio al $fechaFin";
+                }
+                
+                try {
+                    if (method_exists($pedido, 'listarPorFechas')) {
+                        $pedidos = $pedido->listarPorFechas($fechaInicio, $fechaFin, $estado);
+                    } else {
+                        // Si el método no existe, filtrar manualmente
+                        $todosPedidos = $pedido->listar($estado);
+                        $pedidos = array_filter($todosPedidos, function($pedidoItem) use ($fechaInicio, $fechaFin) {
+                            $fechaPedido = date('Y-m-d', strtotime($pedidoItem['fecha']));
+                            return $fechaPedido >= $fechaInicio && $fechaPedido <= $fechaFin;
+                        });
+                        $pedidos = array_values($pedidos); // Reindexar el array
+                    }
+                } catch (Exception $e) {
+                    error_log("Error al obtener pedidos por fechas: " . $e->getMessage());
+                    $todosPedidos = $pedido->listar($estado);
+                    $pedidos = [];
+                    
+                    foreach ($todosPedidos as $pedidoItem) {
+                        $fechaPedido = $pedidoItem['fecha'];
+                        if ($fechaPedido >= $fechaInicio && $fechaPedido <= $fechaFin) {
+                            $pedidos[] = $pedidoItem;
+                        }
+                    }
+                }
+            }
+        } else {
+            $titulo = 'LISTADO GENERAL DE PEDIDOS';
+            $subtitulo = 'Todos los pedidos registrados';
+            $pedidos = $pedido->listar($estado);
+            
+            if ($estado === 0) {
+                $titulo = 'PEDIDOS PENDIENTES';
+                $subtitulo = 'Todos los pedidos pendientes';
+            } elseif ($estado === 1) {
+                $titulo = 'PEDIDOS COMPLETADOS';
+                $subtitulo = 'Todos los pedidos completados';
+            }
+        }
+        
+        $pdf->setTitulo($titulo);
+        $pdf->setSubtitulo($subtitulo);
+        $pdf->AddPage();
+        
+        $totalPedidos = count($pedidos);
+        $montoTotal = 0;
+        $pendientes = 0;
+        $completados = 0;
+        
+        foreach ($pedidos as $pedidoItem) {
+            $montoTotal += $pedidoItem['total'];
+            if ($pedidoItem['estado'] == 0) $pendientes++;
+            if ($pedidoItem['estado'] == 1) $completados++;
+        }
+        
+        $resumen = [
+            'Total de Pedidos' => $totalPedidos,
+            'Pedidos Pendientes' => $pendientes,
+            'Pedidos Completados' => $completados,
+            'Monto Total' => '$' . number_format($montoTotal, 2)
+        ];
+        
+        if ($esReportePorFechas && !empty($fechaInicio) && !empty($fechaFin)) {
+            $resumen = array_merge(['Período' => "$fechaInicio al $fechaFin"], $resumen);
+        }
+        
+        $pdf->agregarResumen($resumen);
+        
+        if (count($pedidos) > 0) {
+            $headers = ['ID', 'Fecha', 'Cliente', 'Productos', 'Total', 'Estado'];
+            $widths = [15, 25, 60, 25, 30, 35];
+            $data = [];
+            
+            foreach ($pedidos as $pedidoItem) {
+                $estadoTexto = $pedidoItem['estado'] == 0 ? 'Pendiente' : 'Completado';
+                $data[] = [
+                    $pedidoItem['id_pedido'],
+                    date('d/m/Y', strtotime($pedidoItem['fecha'])),
+                    $pedidoItem['nomcliente'],
+                    $pedidoItem['cant_producto'],
+                    '$' . number_format($pedidoItem['total'], 2),
+                    $estadoTexto
+                ];
+            }
+            
+            $pdf->crearTabla($headers, $data, $widths);
+        } else {
+            $pdf->SetFont('Arial', 'I', 12);
+            $pdf->Cell(0, 10, 'No hay pedidos en el período seleccionado', 0, 1, 'C');
+        }
+        
+        $nombreArchivo = $esReportePorFechas ? 
+            'Pedidos_Por_Fechas_' . date('Y-m-d') . '.pdf' : 
+            'Pedidos_Generales_' . date('Y-m-d') . '.pdf';
+        
+        $pdf->Output('I', $nombreArchivo);
+        break;
+        
+    case 'reporte_pendientes':
+        if (!isset($_SESSION['usuario'])) {
+            $_SESSION['error_login'] = 'Debes iniciar sesión para acceder a esta página';
+            header('Location: index.php?url=user&type=login');
+            exit;
+        }
+
+        if (!in_array($_SESSION['usuario']['rol'], ['admin', 'superadmin'])) {
+            $_SESSION['error'] = 'No tienes permisos para generar reportes';
+            header('Location: index.php?url=pedido&action=listar');
+            exit;
+        }
+
+        $pdf = new ReportePDF();
+        $pdf->setTitulo('PEDIDOS PENDIENTES');
+        $pdf->setSubtitulo('Pedidos que requieren atención');
+        $pdf->AddPage();
+        
+        $pedidos = $pedido->listar(0);
+        
+        $montoTotal = 0;
+        foreach ($pedidos as $pedidoItem) {
+            $montoTotal += $pedidoItem['total'];
+        }
+        
+        $pdf->agregarResumen([
+            'Pedidos Pendientes' => count($pedidos),
+            'Monto Total Pendiente' => '$' . number_format($montoTotal, 2)
+        ]);
+        
+        if (count($pedidos) > 0) {
+            $headers = ['ID', 'Fecha', 'Cliente', 'Cédula', 'Total'];
+            $widths = [20, 30, 70, 30, 40];
+            $data = [];
+            
+            foreach ($pedidos as $pedidoItem) {
+                $data[] = [
+                    $pedidoItem['id_pedido'],
+                    date('d/m/Y', strtotime($pedidoItem['fecha'])),
+                    $pedidoItem['nomcliente'],
+                    $pedidoItem['ced_cliente'],
+                    '$' . number_format($pedidoItem['total'], 2)
+                ];
+            }
+            
+            $pdf->crearTabla($headers, $data, $widths);
+        } else {
+            $pdf->SetFont('Arial', 'I', 10);
+            $pdf->Cell(0, 10, 'No hay pedidos pendientes', 0, 1, 'C');
+        }
+        
+        $pdf->Output('I', 'Pedidos_Pendientes_' . date('Y-m-d') . '.pdf');
+        break;
+        
+    case 'reporte_completados':
+        if (!isset($_SESSION['usuario'])) {
+            $_SESSION['error_login'] = 'Debes iniciar sesión para acceder a esta página';
+            header('Location: index.php?url=user&type=login');
+            exit;
+        }
+
+        if (!in_array($_SESSION['usuario']['rol'], ['admin', 'superadmin'])) {
+            $_SESSION['error'] = 'No tienes permisos para generar reportes';
+            header('Location: index.php?url=pedido&action=listar');
+            exit;
+        }
+
+        $pdf = new ReportePDF();
+        $pdf->setTitulo('PEDIDOS COMPLETADOS');
+        $pdf->setSubtitulo('Historial de pedidos finalizados');
+        $pdf->AddPage();
+        
+        $pedidos = $pedido->listar(1);
+        
+        $montoTotal = 0;
+        foreach ($pedidos as $pedidoItem) {
+            $montoTotal += $pedidoItem['total'];
+        }
+        
+        $pdf->agregarResumen([
+            'Pedidos Completados' => count($pedidos),
+            'Monto Total' => '$' . number_format($montoTotal, 2)
+        ]);
+        
+        if (count($pedidos) > 0) {
+            $headers = ['ID', 'Fecha', 'Cliente', 'Productos', 'Total'];
+            $widths = [20, 30, 70, 30, 40];
+            $data = [];
+            
+            foreach ($pedidos as $pedidoItem) {
+                $data[] = [
+                    $pedidoItem['id_pedido'],
+                    date('d/m/Y', strtotime($pedidoItem['fecha'])),
+                    $pedidoItem['nomcliente'],
+                    $pedidoItem['cant_producto'],
+                    '$' . number_format($pedidoItem['total'], 2)
+                ];
+            }
+            
+            $pdf->crearTabla($headers, $data, $widths);
+        } else {
+            $pdf->SetFont('Arial', 'I', 10);
+            $pdf->Cell(0, 10, 'No hay pedidos completados', 0, 1, 'C');
+        }
+        
+        $pdf->Output('I', 'Pedidos_Completados_' . date('Y-m-d') . '.pdf');
+        break;
+        
+    case 'reporte_detalle':
+        if (!isset($_SESSION['usuario'])) {
+            $_SESSION['error_login'] = 'Debes iniciar sesión para acceder a esta página';
+            header('Location: index.php?url=user&type=login');
+            exit;
+        }
+
+        if (!in_array($_SESSION['usuario']['rol'], ['admin', 'superadmin'])) {
+            $_SESSION['error'] = 'No tienes permisos para generar reportes';
+            header('Location: index.php?url=pedido&action=listar');
+            exit;
+        }
+
+        if (!isset($_GET['id'])) {
+            header('HTTP/1.1 400 Bad Request');
+            echo json_encode(['error' => 'ID de pedido requerido']);
+            exit;
+        }
+        
+        $id_pedido = $_GET['id'];
+        $detalle = $pedido->obtenerDetalle($id_pedido);
+        
+        if (!$detalle) {
+            header('HTTP/1.1 404 Not Found');
+            echo json_encode(['error' => 'Pedido no encontrado']);
+            exit;
+        }
+        
+        $pdf = new ReportePDF();
+        $pdf->setTitulo('DETALLE DE PEDIDO #' . $id_pedido);
+        $pdf->setSubtitulo('Información completa del pedido');
+        $pdf->AddPage();
+        
+        $pdf->agregarSeccion('Información del Pedido');
+        $pdf->agregarResumen([
+            'Número de Pedido' => $id_pedido,
+            'Fecha' => date('d/m/Y', strtotime($detalle['pedido']['fecha_creacion'])),
+            'Cliente' => $detalle['cliente']['nombre_completo'],
+            'Cédula' => $detalle['cliente']['cedula'],
+            'Estado' => $detalle['pedido']['estado_texto']
+        ]);
+        
+        $pdf->agregarSeccion('Productos del Pedido');
+        
+        $headers = ['Producto', 'Precio Unit.', 'Cantidad', 'Subtotal'];
+        $widths = [80, 30, 30, 40];
+        $data = [];
+        
+        foreach ($detalle['detalles'] as $productoItem) {
+            $data[] = [
+                $productoItem['nombre_producto'],
+                '$' . number_format($productoItem['precio_unitario'], 2),
+                $productoItem['cantidad'],
+                '$' . number_format($productoItem['subtotal'], 2)
+            ];
+        }
+        
+        $pdf->crearTabla($headers, $data, $widths);
+        
+        $pdf->Ln(5);
+        $pdf->SetFont('Arial', 'B', 12);
+        $pdf->Cell(140, 10, 'TOTAL:', 0, 0, 'R');
+        $pdf->Cell(40, 10, '$' . number_format($detalle['pedido']['total'], 2), 0, 1, 'R');
+        
+        $pdf->Output('I', 'Detalle_Pedido_' . $id_pedido . '.pdf');
+        break;
+
+    default:
+        include 'app/views/pedido/pedidoView.php';
+        break;
 }

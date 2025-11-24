@@ -1,294 +1,497 @@
-<?php
-// Iniciar el búfer de salida
-ob_start();
-?>
-<!DOCTYPE html>
-<html lang="es" data-bs-theme="light">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Clientes</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/Natys/Assets/css/sidebar.css">
-    <script>
-        // Verificar el estado del sidebar al cargar la página
-        document.addEventListener('DOMContentLoaded', function() {
-            const sidebar = document.querySelector('.sidebar');
-            const mainContent = document.querySelector('.main-content');
-            const toggleBtn = document.querySelector('.sidebar-toggle');
-            
-            // Obtener el estado guardado o usar 'collapsed' por defecto
-            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-            
-            // Aplicar el estado inicial
-            if (isCollapsed) {
-                sidebar.classList.add('collapsed');
-                mainContent.classList.remove('expanded');
-            } else {
-                sidebar.classList.remove('collapsed');
-                mainContent.classList.add('expanded');
-            }
-            
-            // Manejar el clic en el botón de toggle
-            if (toggleBtn) {
-                toggleBtn.addEventListener('click', function() {
-                    sidebar.classList.toggle('collapsed');
-                    mainContent.classList.toggle('expanded');
-                    
-                    // Guardar el estado
-                    const isNowCollapsed = sidebar.classList.contains('collapsed');
-                    localStorage.setItem('sidebarCollapsed', isNowCollapsed);
-                });
-            }
-        });
-    </script>
-    <style>
-        :root {
-            --primary-color: #cc1d1d;
-            --sidebar-bg: #343a40;
-            --sidebar-text: #e9ecef;
-            --sidebar-hover: #495057;
-            
-            /* Tema claro fijo */
-            --body-bg: #f8f9fa;
-            --card-bg: #ffffff;
-            --text-primary: #212529;
-            --text-secondary: #6c757d;
-            --border-color: #dee2e6;
-            --table-bg: #ffffff;
-            --table-text: #212529;
-            --table-border: #dee2e6;
-            --table-hover: rgba(0,0,0,.075);
-        }
-        
-        body {
-            background-color: var(--body-bg);
-            color: var(--text-primary);
-            transition: all 0.3s ease;
-        }
-        
-        /* Tarjetas */
-        .card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            transition: all 0.3s ease;
-        }
-        
-        /* Tablas */
-        .table {
-            color: var(--table-text);
-            background-color: var(--table-bg);
-            border-color: var(--table-border);
-        }
-        
-        .table th,
-        .table td {
-            border-color: var(--table-border);
-        }
-        
-        .table-hover tbody tr:hover {
-            background-color: var(--table-hover);
-            color: var(--table-text);
-        }
-        
-        /* Formularios */
-        .form-control, .form-select {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-        }
-        
-        .form-control:focus, .form-select:focus {
-            background-color: var(--card-bg);
-            color: var(--text-primary);
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.25rem rgba(204, 29, 29, 0.25);
-        }
-        
-        /* Modales */
-        .modal-content {
-            background-color: var(--card-bg);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-        }
-        
-        .modal-header, .modal-footer {
-            border-color: var(--border-color);
-        }
-        
-        .text-muted {
-            color: var(--text-secondary) !important;
-        }
-        
-
-    </style>
-</head>
-<body>
-
 <style>
-    
-</style>
-
-<!-- App/Views/partials/sidebar.php -->
-<div class="sidebar bg-dark text-white">
-    <div class="sidebar-header p-3 d-flex justify-content-between align-items-center">
-        <h4 class="sidebar-title m-0">Natys</h4>
-        <button class="btn btn-sm btn-outline-light sidebar-toggle">
-            <i class="fas fa-bars"></i>
-        </button>
-    </div>
-    <hr class="bg-light m-0">
-    <ul class="nav flex-column">
-        <li class="nav-item">
-            <a href="index.php?url=perfil" class="nav-link text-warning <?= strpos($_SERVER['REQUEST_URI'], 'perfil') !== false ? 'active bg-secondary' : '' ?>">
-                <i class="fas fa-user-circle"></i>
-                <span class="ms-2">Perfil</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="index.php?url=cliente" class="nav-link text-white <?= strpos($_SERVER['REQUEST_URI'], 'cliente') !== false ? 'active bg-primary' : '' ?>">
-                <i class="fas fa-user-tie"></i>
-                <span class="ms-2">Clientes</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="index.php?url=pedido" class="nav-link text-white <?= strpos($_SERVER['REQUEST_URI'], 'pedido') !== false ? 'active bg-primary' : '' ?>">
-                <i class="fas fa-clipboard-list"></i>
-                <span class="ms-2">Pedidos</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="index.php?url=producto" class="nav-link text-white <?= strpos($_SERVER['REQUEST_URI'], 'producto') !== false ? 'active bg-primary' : '' ?>">
-                <i class="fas fa-cookie-bite"></i>
-                <span class="ms-2">Productos</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="index.php?url=pago" class="nav-link text-white <?= strpos($_SERVER['REQUEST_URI'], 'pago') !== false ? 'active bg-primary' : '' ?>">
-                <i class="fas fa-credit-card"></i>
-                <span class="ms-2">Pagos</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="index.php?url=movimiento" class="nav-link text-white <?= strpos($_SERVER['REQUEST_URI'], 'movimiento') !== false ? 'active bg-primary' : '' ?>">
-                <i class="fas fa-random"></i>
-                <span class="ms-2">Movimientos</span>
-            </a>
-        </li>
-        <!-- Botón de Cerrar Sesión -->
-        <li class="nav-item mt-auto">
-            <a href="index.php?url=login&action=cerrarSesion" class="nav-link text-danger">
-                <i class="fas fa-sign-out-alt"></i>
-                <span class="ms-2">Cerrar Sesión</span>
-            </a>
-        </li>
-    </ul>
-</div>
-
-<style>
-    /* Assets/css/sidebar.css */
-.sidebar {
-    width: 250px;
-    min-height: 100vh;
-    position: fixed;
-    left: 0;
-    top: 0;
-    z-index: 1000;
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+/* Estilos para el logo en el sidebar */
+.sidebar-logo {
+    padding: 15px 10px;
+    overflow: hidden;
     transition: all 0.3s ease;
-    overflow-x: hidden;
 }
 
-/* Estilo cuando el sidebar está colapsado */
+.sidebar.collapsed .sidebar-logo {
+    padding: 10px 5px;
+}
+
+.sidebar.collapsed .sidebar-logo-img {
+    max-width: 45px;
+    height: auto;
+}
+
+/* Estilos para el sidebar */
+.sidebar {
+    position: fixed;
+    top: 56px; /* Altura del header */
+    left: 0;
+    bottom: 0;
+    z-index: 1000;
+    width: 250px;
+    transition: all 0.3s ease;
+    overflow-y: auto;
+    background-color: #343a40;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar.initial-load {
+    transition: none !important;
+}
+
 .sidebar.collapsed {
-    width: 70px;
+    width: 85px;
 }
 
-.sidebar.collapsed .sidebar-title,
-.sidebar.collapsed .nav-link span {
-    display: none !important;
+.sidebar.collapsed .nav-text {
+    display: none;
+}
+
+/* Estilos para el logo en sidebar colapsado */
+.sidebar.collapsed .sidebar-logo {
+    height: 0;
+    max-width: 80%;
+    transition: all 0.3s ease;
+}
+
+/* Estilos para el contenedor del logo */
+.logo-container {
+    user-select: none; /* Evitar selección de texto */
+}
+
+.sidebar-logo {
+    max-width: 80%;
+    height: auto;
+    margin: 0 auto;
+    display: block;
+    transition: all 0.3s ease;
+}
+
+.sidebar.collapsed .nav-item {
+    text-align: center;
 }
 
 .sidebar.collapsed .nav-link {
-    text-align: center;
-    padding: 0.75rem 0.5rem !important;
     justify-content: center;
+    padding: 0.75rem 0.5rem;
+    border-left: 3px solid transparent;
+}
+
+.sidebar.collapsed .nav-link.active {
+    border-left: 3px solid #007bff;
+    padding-left: 0.5rem;
 }
 
 .sidebar.collapsed .nav-link i {
-    margin: 0 !important;
-    font-size: 1.2rem;
-    display: inline-block;
+    margin-right: 0;
+    font-size: 25px;
+}
+.nav-item{
+    font-size: 25px;
+}
+/* Estilos consistentes para el contenido principal */
+.main-content {
+    margin-left: 250px;
+    transition: all 0.3s ease;
+    padding: 20px;
+    padding-top: 76px; /* Altura del header + 20px */
+    min-height: calc(100vh - 56px); /* Asegurar que ocupe toda la altura */
+    background-color: #f8f9fa;
 }
 
-.sidebar-toggle {
-    transition: all 0.3s ease;
-    width: 30px;
-    height: 30px;
+.sidebar.collapsed + .main-content {
+    margin-left: 60px;
+}
+
+/* Estilos para los enlaces del menú */
+.nav-link {
+    color: #fff !important;
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 0;
-    border-radius: 4px;
-    border: 1px solid rgba(255,255,255,0.2);
+    padding: 0.75rem 1rem;
+    transition: all 0.3s;
+    border-left: 3px solid transparent;
+    opacity: 0.8;
+    text-decoration: none;
 }
 
-.sidebar.collapsed .sidebar-toggle {
-    margin: 0 auto;
+.nav-link:hover, 
+.nav-link.active,
+.nav-link:focus {
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 0.1);
+    text-decoration: none;
+    border-left: 3px solid #007bff;
+    padding-left: calc(1rem - 3px);
+    outline: none;
+}
+
+.nav-link i {
+    margin-right: 10px;
+    width: 45px;
+    text-align: center;
+    color: #fff;
+}
+
+/* Asegurar consistencia en todos los módulos */
+.sidebar-menu .nav-item {
+    margin: 0;
+    padding: 0;
+}
+
+.sidebar-menu .nav-link {
+    border-radius: 0;
+    margin: 0;
+}
+
+/* Asegurar que los iconos hereden el color del enlace */
+.nav-link.active i,
+.nav-link:hover i {
+    color: #fff;
+}
+
+/* Reset de estilos para el menú de usuario */
+.sidebar-footer .dropdown-menu {
+    background-color: #343a40;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-footer .dropdown-item {
+    color: #fff;
+    opacity: 0.8;
+}
+
+.sidebar-footer .dropdown-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    opacity: 1;
 }
 
 .sidebar-header {
-    padding: 1rem;
+    padding: 15px 10px;
+    border-bottom: 1px solid #4b545c;
 }
 
-.sidebar .nav-link {
-    padding: 0.75rem 1rem;
-    margin: 0.15rem 0;
-    border-radius: 0;
-    transition: all 0.3s ease;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+/* Barra superior fija para notificaciones y perfil */
+.top-navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    background-color: #f8f9fa;
+    z-index: 1030;
     display: flex;
+    justify-content: space-between;
     align-items: center;
+    padding: 0 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid #dee2e6;
 }
 
-.sidebar .nav-link i {
-    width: 20px;
-    text-align: center;
+.top-navbar .navbar-brand {
+    margin-right: 0;
 }
 
-.sidebar .nav-link:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    padding-left: 1.25rem;
+.top-navbar .nav-item {
+    position: relative;
 }
 
-.sidebar .nav-link.active {
-    font-weight: bold;
-    background-color: #0d6efd !important;
+.top-navbar .dropdown-menu {
+    position: fixed;
+    top: 56px;
+    right: 20px;
+    left: auto;
+    z-index: 1001;
+    margin-top: 0;
 }
 
-/* Estilo específico para el botón de cerrar sesión */
-.sidebar .nav-link.text-danger:hover {
-    background-color: rgba(220, 53, 69, 0.2);
+/* Estilos para los dropdowns fijos */
+.fixed-dropdown {
+    position: fixed;
+    top: 56px;
+    right: 20px;
+    z-index: 1001;
 }
 
-/* Los estilos de .main-content han sido movidos a layout.php */
-
-/* Estilos del body */
-body {
-    margin: 0;
-    padding: 0;
-    overflow-x: hidden;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+@media (max-width: 767.98px) {
+    .sidebar {
+        transform: translateX(-100%);
+        z-index: 1050;
+    }
+    
+    .sidebar.show {
+        transform: translateX(0);
+    }
+    
+    .main-content {
+        margin-left: 0;
+    }
+    
+    .sidebar.collapsed {
+        transform: translateX(-100%);
+    }
+    
+    .top-navbar {
+        padding: 0 15px;
+    }
+    
+    .top-navbar .dropdown-menu {
+        right: 15px;
+    }
+    
+    /* Ajuste de margen entre íconos y texto solo en móviles */
+    .nav-link i {
+        margin-right: 10px; /* Espacio entre ícono y texto */
+    }
+    
+    .nav-link {
+        padding-left: 15px; /* Ajustar padding izquierdo para mejor espaciado */
+    }
+    
+    /* Asegurar que el texto tenga margen izquierdo */
+    .nav-text {
+        margin-left: 10px; /* Añadir margen izquierdo al texto */
+    }
 }
 </style>
 
-</body>
-</html>
+<script>
+// Estado del sidebar
+document.addEventListener('DOMContentLoaded', function() {
+    // Función para actualizar el ícono del botón (siempre mostrará la hamburguesa)
+    function updateToggleIcon() {
+        const toggleBtn = document.getElementById('sidebarToggle');
+        if (!toggleBtn) return;
+        
+        const icon = toggleBtn.querySelector('i');
+        if (!icon) return;
+        
+        // Siempre mostrar el ícono de hamburguesa
+        icon.className = 'fas fa-bars';
+    }
+    const sidebar = document.querySelector('.sidebar');
+    const mainContent = document.querySelector('.main-content');
+    const toggleBtn = document.querySelector('.sidebar-toggle');
+    const mobileMenuBtn = document.querySelector('[data-bs-toggle="offcanvas"]');
+    
+    // Cargar estado del sidebar (por defecto colapsado si no hay preferencia guardada)
+    const isCollapsed = localStorage.getItem('sidebarCollapsed') !== 'false';
+
+    // Aplicar estado inicial con clase especial para evitar animaciones
+    sidebar.classList.add('initial-load');
+
+    if (isCollapsed) {
+        sidebar.classList.add('collapsed');
+        if (mainContent) mainContent.classList.add('expanded');
+    } else {
+        sidebar.classList.remove('collapsed');
+        if (mainContent) mainContent.classList.remove('expanded');
+    }
+
+    // Forzar reflow inmediato
+    sidebar.offsetHeight;
+
+    // Remover la clase initial-load después de que el navegador haya renderizado
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            sidebar.classList.remove('initial-load');
+        });
+    });
+
+    // Actualizar ícono al cargar
+    updateToggleIcon();
+    
+    // Toggle sidebar en desktop
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const isCollapsing = !sidebar.classList.contains('collapsed');
+
+            // Alternar clases
+            sidebar.classList.toggle('collapsed');
+            if (mainContent) mainContent.classList.toggle('expanded');
+
+            // No es necesario cambiar el ícono ya que siempre será la hamburguesa
+
+            // Guardar estado
+            localStorage.setItem('sidebarCollapsed', isCollapsing);
+
+            // Actualizar ícono
+            updateToggleIcon();
+        });
+    }
+    
+    // Cerrar sidebar en móvil al hacer clic en un enlace
+    const navLinks = document.querySelectorAll('.sidebar-menu .nav-link');
+    navLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            if (window.innerWidth < 768) {
+                const offcanvas = bootstrap.Offcanvas.getInstance(document.getElementById('sidebarOffcanvas'));
+                if (offcanvas) offcanvas.hide();
+            }
+        });
+    });
+    
+    // Manejar el comportamiento de los dropdowns fijos
+    const dropdownToggles = document.querySelectorAll('.fixed-dropdown-toggle');
+    dropdownToggles.forEach(toggle => {
+        toggle.addEventListener('click', function() {
+            const dropdownMenu = this.nextElementSibling;
+            dropdownMenu.classList.toggle('show');
+            
+            // Cerrar otros dropdowns abiertos
+            document.querySelectorAll('.fixed-dropdown').forEach(menu => {
+                if (menu !== dropdownMenu && menu.classList.contains('show')) {
+                    menu.classList.remove('show');
+                }
+            });
+        });
+    });
+    
+    // Cerrar dropdowns al hacer clic fuera de ellos
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.fixed-dropdown-toggle') && !e.target.closest('.fixed-dropdown')) {
+            document.querySelectorAll('.fixed-dropdown').forEach(menu => {
+                menu.classList.remove('show');
+            });
+        }
+    });
+});
+</script>
+
+<!-- Barra superior fija para notificaciones y perfil -->
+<nav class="top-navbar">
+    <a class="navbar-brand" href="#" id="sidebarToggle">
+        <i class="fas fa-bars"></i>
+    </a>
+    
+    <ul class="navbar-nav d-flex flex-row">
+        <!-- Notificaciones -->
+        <li class="nav-item me-3">
+            <a class="nav-link fixed-dropdown-toggle" href="#" role="button">
+                <i class="fas fa-bell"></i>
+                <span class="badge bg-danger rounded-pill">3</span>
+            </a>
+            <div class="dropdown-menu fixed-dropdown" aria-labelledby="navbarDropdown">
+                <h6 class="dropdown-header">Notificaciones</h6>
+                <a class="dropdown-item" href="#">Nuevo pedido recibido</a>
+                <a class="dropdown-item" href="#">Pago procesado</a>
+                <a class="dropdown-item" href="#">Cliente nuevo registrado</a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item text-center" href="#">Ver todas</a>
+            </div>
+        </li>
+        
+        <!-- Perfil de usuario -->
+        <li class="nav-item">
+            <a class="nav-link fixed-dropdown-toggle" href="#" role="button">
+                <i class="fas fa-user-circle"></i>
+            </a>
+            <div class="dropdown-menu fixed-dropdown" aria-labelledby="navbarDropdown">
+                <h6 class="dropdown-header">Mi Cuenta</h6>
+                <a class="dropdown-item" href="#">
+                    <i class="fas fa-user me-2"></i>Mi Perfil
+                </a>
+                <a class="dropdown-item" href="#">
+                    <i class="fas fa-cog me-2"></i>Configuración
+                </a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="#">
+                    <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                </a>
+            </div>
+        </li>
+    </ul>
+</nav>
+
+<!-- Sidebar para desktop y móvil -->
+<aside class="sidebar bg-dark text-white">
+    <!-- Contenido del sidebar -->
+    <div class="sidebar-menu">
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a href="index.php?url=cliente" style="padding-top: 40px;" class="nav-link <?= ($_GET['url'] ?? '') === 'cliente' ? 'active' : '' ?>">
+                    <i class="fas fa-user-tie"></i>
+                    <span class="nav-text">Clientes</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="index.php?url=pedido" class="nav-link <?= ($_GET['url'] ?? '') === 'pedido' ? 'active' : '' ?>">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="nav-text">Pedidos</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="index.php?url=producto" class="nav-link <?= ($_GET['url'] ?? '') === 'producto' ? 'active' : '' ?>">
+                    <i class="fas fa-cookie-bite"></i>
+                    <span class="nav-text">Productos</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="index.php?url=pago" class="nav-link <?= ($_GET['url'] ?? '') === 'pago' ? 'active' : '' ?>">
+                    <i class="fas fa-credit-card"></i>
+                    <span class="nav-text">Pagos</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="index.php?url=movimiento" class="nav-link <?= ($_GET['url'] ?? '') === 'movimiento' ? 'active' : '' ?>">
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                    <span class="nav-text">Movimientos</span>
+                </a>
+            </li>
+            
+            <!-- Logo de Natys (solo visual, no afecta funcionalidad) -->
+            <li class="nav-item mt-4">
+                <div class="logo-container" style="pointer-events: none; padding: 25px 0; border-top: 1px solid #4b545c;">
+                    <div style="display: flex; justify-content: center;">
+                        <img src="/Natys/Assets/img/Natys.png" alt="Natys" class="sidebar-logo" style="height: 70px; max-width: 90%; transition: all 0.3s ease;">
+                    </div>
+                </div>
+            </li>
+        </ul>
+    </div>
+    
+    <!-- Espacio para que el último ítem no quede pegado al borde -->
+    <div class="p-2"></div>
+</aside>
+
+<!-- Botón para abrir el menú en móviles -->
+<button class="btn btn-primary d-md-none position-fixed" style="bottom: 20px; right: 20px; z-index: 1040; width: 50px; height: 50px; border-radius: 50%;" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas">
+    <i class="fas fa-bars"></i>
+</button>
+
+<!-- Offcanvas para móviles -->
+<div class="offcanvas offcanvas-start d-md-none" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
+    <div class="offcanvas-header bg-dark text-white">
+        <h5 class="offcanvas-title" id="sidebarOffcanvasLabel">Menú</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body bg-dark p-0">
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a href="index.php?url=home" class="nav-link text-white <?= ($_GET['url'] ?? '') === 'home' ? 'active bg-primary' : '' ?>">
+                    <i class="fas fa-home me-2"></i>Inicio
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="index.php?url=cliente" class="nav-link text-white <?= ($_GET['url'] ?? '') === 'cliente' ? 'active bg-primary' : '' ?>">
+                    <i class="fas fa-user-tie me-2"></i>Clientes
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="index.php?url=pedido" class="nav-link text-white <?= ($_GET['url'] ?? '') === 'pedido' ? 'active bg-primary' : '' ?>">
+                    <i class="fas fa-shopping-cart me-2"></i>Pedidos
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="index.php?url=producto" class="nav-link text-white <?= ($_GET['url'] ?? '') === 'producto' ? 'active bg-primary' : '' ?>">
+                    <i class="fas fa-cookie-bite me-2"></i>Productos
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="index.php?url=pago" class="nav-link text-white <?= ($_GET['url'] ?? '') === 'pago' ? 'active bg-primary' : '' ?>">
+                    <i class="fas fa-credit-card me-2"></i>Pagos
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="index.php?url=movimiento" class="nav-link text-white <?= ($_GET['url'] ?? '') === 'movimiento' ? 'active bg-primary' : '' ?>">
+                    <i class="fas fa-random me-2"></i>Movimientos
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
